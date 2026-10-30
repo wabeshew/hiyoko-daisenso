@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""art/*.png（codex で作った背景が透明な絵）の余白を切り抜いて WebP にし、
+"""art/*.png（codex で作った背景が透明な絵）の余白を切り抜いて WebP にし（bg_ で はじまる せなかの けしきは きりぬかない）、
 index.html の SPRITE_SRC（// SPRITES:BEGIN 〜 // SPRITES:END）に埋め込む。
 使い方: python3 art/embed.py   （macOS の sips と cwebp を使う）
 ファイル名（拡張子なし）がそのまま SPRITE_SRC のキーになる。"""
@@ -62,11 +62,15 @@ def crop_box(png):
 
 
 def webp_uri(png):
-    x, y, w, h = crop_box(png)
     with tempfile.TemporaryDirectory() as d:
         out = pathlib.Path(d) / 'o.webp'
-        subprocess.run(['cwebp', '-quiet', '-q', '85', '-alpha_q', '90', '-crop', str(x), str(y), str(w), str(h),
-                        '-resize', str(WIDE.get(png.stem, WIDTH)), '0', str(png), '-o', str(out)], check=True)
+        if png.stem.startswith('bg_'):  # せなかの けしき：きりぬかず、よこ 1400px に
+            w, h = 1400, 0
+            subprocess.run(['cwebp', '-quiet', '-q', '78', '-resize', '1400', '0', str(png), '-o', str(out)], check=True)
+        else:
+            x, y, w, h = crop_box(png)
+            subprocess.run(['cwebp', '-quiet', '-q', '85', '-alpha_q', '90', '-crop', str(x), str(y), str(w), str(h),
+                            '-resize', str(WIDE.get(png.stem, WIDTH)), '0', str(png), '-o', str(out)], check=True)
         data = out.read_bytes()
     print(f'  {png.stem}: {w}x{h} → {len(data) // 1024}KB')
     return 'data:image/webp;base64,' + base64.b64encode(data).decode()

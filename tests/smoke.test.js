@@ -80,12 +80,19 @@ function fight(strat) {
   }
   for (let n = 0; n < 90 && D.mode === 'playing'; n++) { D.update(dt); D.draw(); }
 }
-// 7さいの 子が やりそうな あそびかた：だせる なかまを かたっぱしから 出す。えさばこは つぶが あまったら 大きくする
-function spam() {
-  const G = D.G, P = D.PURSE[G.purse];
-  if (P.up && G.grain >= P.up + 60) D.upgradePurse();
-  for (let i = 4; i >= 0; i--) D.deploy(i);
-  D.fireCannon();
+// ふつうの 7さいの あそびかた：0.7びょうごとに ボタンを おす。ひかっている（だせる）ボタンを よく おし、
+// えさばこと コケコッコー！も ときどき つかう（バランスは この あそびかたで きめた。CLAUDE.md の バランス を 見る）
+function kid() {
+  const G = D.G;
+  G._k = (G._k || 0) + 1 / 30;
+  if (G._k < 0.7) return;
+  G._k = 0;
+  const P = D.PURSE[G.purse];
+  if (G.cannon >= G.cannonCd && (G._c = (G._c || 0) + 1) > 2 && Math.random() < 0.7) { G._c = 0; D.fireCannon(); return; }
+  if (P.up && G.grain >= P.up + 100 && Math.random() < 0.3) { D.upgradePurse(); return; }
+  const ok = G.slots.map((k, i) => i).filter(i => G.grain >= D.UNITS[G.slots[i]].cost * G.mods.cost && !(G.cool[G.slots[i]] > 0));
+  const pool = ok.length && Math.random() < 0.75 ? ok : G.slots.map((k, i) => i);
+  D.deploy(pool[Math.floor(Math.random() * pool.length)]);
 }
 // ちずでは いちばん 左の マス、えらぶ がめんでは いちばん 上を えらんで、さいごまで すすむ。まけても ハートが あれば やりなおす
 function playRun(strat) {
@@ -115,24 +122,24 @@ assert.strictEqual(r.log.length, 3, 'ハートの 数だけ たたかって い�
 assert.strictEqual(store[SAVE], undefined, 'まけたのに セーブが のこっている');
 console.log('ok  なにもしないと まける');
 
-// ボタンを おせるだけ おす あそびかたで、ボスまで いって かてる
+// ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）
 let wins = 0;
 for (let s = 1; s <= 6; s++) {
   Math.random = seeded(s * 101);
-  r = playRun(spam);
+  r = playRun(kid);
   const party = D.UNIT_ORDER.filter(k => r.run.party[k]).map(k => k + r.run.party[k]).join(' ');
   console.log((r.mode === 'win' ? 'ok  ' : 'NG  ') + 'ぼうけん' + s + '：' + r.log.join(' → ') + '｜' + party + '｜レリック ' + r.run.relics.length + '｜❤️' + r.run.hearts);
   if (r.mode === 'win') wins++;
   assert.ok(Object.keys(r.run.party).length <= 5, 'なかまが 5人より おおい');
 }
-assert.ok(wins >= 5, 'ボタンを おすだけで かてない ぼうけんが おおい: ' + wins + '/6');
+assert.ok(wins >= 5, 'ふつうの あそびかたで かてない ぼうけんが おおい: ' + wins + '/6');
 assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
 
 // かったら マスが すすんで、なかまを えらべて、セーブされる
 Math.random = seeded(3);
 D.newRun(); D.openMap();
 D.goNode(D.nextNodes()[0]);
-fight(spam);
+fight(kid);
 assert.strictEqual(D.mode, 'pick', 'かったのに なかまを えらぶ がめんに ならない');
 assert.ok(D.picks.length >= 1 && D.picks.length <= 3 && D.picks.skip, 'なかまの こうほが おかしい');
 const before = JSON.stringify(D.run.party);
