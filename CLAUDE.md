@@ -8,7 +8,7 @@
 - `index.html` をブラウザで開くだけで動く。確認は `.claude/launch.json` の hiyoko（python の http.server、ポート 8766）。
 - テスト：`node tests/smoke.test.js`（ブラウザ不要。なにもしないと まける、ボタンを おせるだけ おす あそびかたで 全ステージに かてる、なかまが ふえる、セーブ、コケコッコー！を確認する。乱数は 見た目にしか使っていないので、結果は毎回同じ）
 - 外部依存は Google Fonts（Mochiy Pop One）だけ。
-- 公開はまだしていない。ぴよドラと同じく GitHub Pages にするなら、公開リポジトリなので コミットの作者は GitHub の noreply アドレスにしてある（このリポジトリの git config）。もとの PNG（`art/*.png`）は `.gitignore` で外している。
+- 公開：GitHub Pages（https://wabeshew.github.io/hiyoko-daisenso/、リポジトリ wabeshew/hiyoko-daisenso の main の一番上）。`git push` するだけで1〜2分で反映される。公開リポジトリなので、コミットの作者は GitHub の noreply アドレスにしてある（このリポジトリの git config）。もとの PNG（`art/*.png`）は `.gitignore` で外している。
 
 ## 対象ユーザーと文言のルール
 
