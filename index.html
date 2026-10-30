@@ -95,8 +95,6 @@ body{
 .unit .ucost{ position:relative; font-size:13px; line-height:1; white-space:nowrap; }
 .unit.poor{ background:var(--off); --edge:var(--off-edge); color:var(--muted); }
 .unit.poor .uimg{ opacity:.55; filter:grayscale(.6); }
-.unit.locked{ background:var(--off); --edge:var(--off-edge); cursor:default; }
-.unit.locked .uimg{ font-size:20px; opacity:.6; }
 .cd{ position:absolute; left:0; right:0; bottom:0; height:calc(var(--cd,0) * 100%); background:rgba(60,40,10,.32); pointer-events:none; }
 .pressed{ transform:translateY(4px); box-shadow:0 1px 0 var(--edge), 0 3px 6px rgba(0,0,0,.12); }
 .ctl:focus-visible, .unit:focus-visible, .big:focus-visible, .sub:focus-visible, .round:focus-visible, .stg:focus-visible{ outline:3px solid #2f8fff; outline-offset:3px; }
@@ -145,7 +143,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   text-shadow:0 2px 0 rgba(120,40,0,.35);
 }
 .big:active{ transform:translateY(4px); box-shadow:0 2px 0 #b9501c; }
-.big[hidden], .keys[hidden], .newmate[hidden]{ display:none; }
+.big[hidden], .sub[hidden], .keys[hidden]{ display:none; }
 .sub{
   display:block; margin:14px auto 0; font-family:inherit; font-size:15px; border:none; background:none;
   color:var(--muted); text-decoration:underline; text-underline-offset:4px; cursor:pointer; padding:6px 10px;
@@ -153,31 +151,59 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 .emoji{ font-size:54px; line-height:1.1; margin-top:4px; }
 .msg{ font-size:15px; line-height:1.7; margin:0 0 6px; }
 .keys{ font-size:11px; color:var(--muted); margin:12px 0 0; line-height:1.6; }
-.stages{ display:grid; gap:9px; margin:6px 0 4px; }
-.stg{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:left; font-family:inherit; color:var(--ink);
-  border:none; border-radius:16px; padding:9px 12px; background:var(--soft); box-shadow:0 4px 0 var(--card-edge); cursor:pointer;
+.picks{ display:grid; gap:9px; margin:8px 0 4px; }
+.pick{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left; font-family:inherit; color:var(--ink);
+  border:none; border-radius:18px; padding:10px 14px; background:var(--soft); box-shadow:0 4px 0 var(--card-edge);
+  cursor:pointer; font-size:14px; line-height:1.5;
 }
-.stg .no{
-  flex:none; width:34px; height:34px; border-radius:50%; background:#ff7a3d; color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:17px; box-shadow:0 3px 0 #b9501c;
+.pick:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--card-edge); }
+.pick img{ flex:none; width:64px; height:56px; object-fit:contain; }
+.pick .e, .pick .ri{ flex:none; width:64px; text-align:center; font-size:40px; line-height:1.2; }
+.pick b{ display:block; font-weight:400; font-size:18px; }
+.pick em{ display:block; font-style:normal; font-size:13px; color:#e8642a; }
+.pick small{ display:block; font-size:12px; color:var(--muted); }
+.won{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:6px 0; font-size:22px; }
+/* ちず：ぼうけんの ちず（紙）なので、ダークモードでも 紙の 色の まま */
+.mapcard{ max-width:480px; padding:14px 14px 10px; }
+.maphead{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.maphead .pill{ box-shadow:0 2px 0 var(--card-edge); background:var(--soft); }
+.relics{ display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; }
+.relics small{ font-size:11px; color:var(--muted); }
+.relic{ width:34px; height:34px; padding:0; border:none; border-radius:50%; background:var(--soft); font-size:18px; cursor:pointer; box-shadow:0 2px 0 var(--card-edge); }
+.relic-tip{ min-height:18px; margin:4px 0 0; font-size:12px; color:var(--muted); text-align:right; }
+.party{ display:flex; justify-content:center; gap:8px; margin:2px 0 8px; }
+.mate{ display:flex; flex-direction:column; align-items:center; font-size:11px; line-height:1.2; }
+.mate img{ height:34px; }
+.mate .e{ font-size:26px; }
+.mapbox{
+  position:relative; height:min(50vh, 460px); overflow-y:auto; border-radius:18px; touch-action:pan-y;
+  background:#fbf0d4; box-shadow:inset 0 0 0 3px #e3c78f;
 }
-.stg .nm{ flex:1; font-size:17px; line-height:1.3; }
-.stg small{ display:block; font-size:11px; color:var(--muted); }
-.stg .mk{ font-size:20px; }
-.stg:disabled{ opacity:.55; cursor:default; box-shadow:none; }
-.stg:disabled .no{ background:#b8ad9c; box-shadow:none; }
-.newmate{ display:flex; align-items:center; gap:12px; background:var(--soft); border-radius:16px; padding:8px 14px; margin:8px 0; text-align:left; font-size:14px; line-height:1.6; }
-.newmate img{ height:60px; }
-.newmate .e{ font-size:44px; }
-.newmate b{ font-weight:400; font-size:18px; }
-.newmate small{ display:block; font-size:12px; color:var(--muted); }
+.mapin{ position:relative; }
+.mapin svg{ position:absolute; inset:0; width:100%; height:100%; }
+.mapin line{ stroke:#5a3a1e; stroke-opacity:.3; stroke-width:3; stroke-dasharray:1 8; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.mapin line.done{ stroke-opacity:.85; stroke-dasharray:none; }
+.mapin line.next{ stroke:#e8642a; stroke-opacity:.9; }
+.node{
+  position:absolute; width:44px; height:44px; margin:-22px 0 0 -22px; padding:0; border-radius:50%;
+  border:3px solid #5a3a1e; background:#fffaf0; font-size:21px; line-height:1; cursor:default; opacity:.5;
+}
+.node.boss{ width:60px; height:60px; margin:-30px 0 0 -30px; font-size:32px; }
+.node.done{ opacity:1; background:#ffe39a; }
+.node.avail{ opacity:1; cursor:pointer; background:#ffffff; box-shadow:0 0 0 5px rgba(232,100,42,.45); animation:pulse .8s ease-in-out infinite alternate; }
+.node.here::after{ content:'🐤'; position:absolute; right:-16px; top:-14px; font-size:20px; }
+@keyframes pulse{ from{ transform:scale(1); } to{ transform:scale(1.12); } }
+.legend{ margin:8px 0 0; font-size:11px; line-height:1.7; color:var(--muted); }
 @media (max-height:700px){
   .unit{ min-height:68px; } .unit .uimg, .unit .uimg img{ height:36px; }
   #heroArt{ width:200px; height:80px; }
   .howto li{ padding:4px 10px; }
 }
-@media (prefers-reduced-motion: reduce){ .cannon.ready{ animation:none; } }
+.unit .ulv{ position:absolute; top:4px; right:7px; font-size:11px; line-height:1; color:#c0541f; }
+.unit .ulv:empty{ display:none; }
+.unit.empty{ background:var(--off); --edge:var(--off-edge); cursor:default; }
+@media (prefers-reduced-motion: reduce){ .cannon.ready, .node.avail{ animation:none; } }
 </style>
 </head>
 <body>
@@ -196,46 +222,64 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   <nav id="controls">
     <button id="btnPurse" class="ctl purse" type="button"><span class="ico">🧺</span><span class="tx"><span class="lbl">えさばこ <b id="purseLv">Lv1</b></span><small id="purseCost"></small></span></button>
     <button id="btnCannon" class="ctl cannon" type="button"><span class="fill"></span><span class="ico">📣</span><span class="tx"><span class="lbl">コケコッコー！</span><small id="cannonTip">ためているよ</small></span></button>
-    <button class="unit" type="button"><span class="cd"></span><span class="uimg"></span><span class="ucost"></span></button>
-    <button class="unit" type="button"><span class="cd"></span><span class="uimg"></span><span class="ucost"></span></button>
-    <button class="unit" type="button"><span class="cd"></span><span class="uimg"></span><span class="ucost"></span></button>
-    <button class="unit" type="button"><span class="cd"></span><span class="uimg"></span><span class="ucost"></span></button>
-    <button class="unit" type="button"><span class="cd"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
   </nav>
 
   <section id="titleScreen" class="overlay">
     <div class="card">
       <canvas id="heroArt" aria-hidden="true"></canvas>
       <h1>ひよこ<br>だいせんそう！</h1>
-      <p class="lead">いたずらな どうぶつたちが<br>ひよこの とりごやに せめてきた！<br>なかまを だして、あいての とりでを こわそう！</p>
+      <p class="lead">いたずらな どうぶつたちが<br>ひよこの とりごやに せめてきた！<br>ちずを すすんで、クマの とりでを こわそう！</p>
       <ul class="howto">
-        <li><span class="ic">🐤</span><span>したの ボタンを おすと、なかまが でるよ</span></li>
-        <li><span class="ic">🌾</span><span>なかまを だすと つぶを つかうよ。つぶは だんだん たまるよ</span></li>
+        <li><span class="ic">🗺️</span><span>ちずで すすむ みちを えらぼう。さいごに ボスが まってるよ</span></li>
+        <li><span class="ic">🐤</span><span>したの ボタンで なかまを だそう。つぶ 🌾を つかうよ</span></li>
         <li><span class="ic">🧺</span><span>えさばこを おおきくすると、つぶが はやく たまるよ</span></li>
         <li><span class="ic">📣</span><span>コケコッコー！が ひかったら おしてね。てきが ふっとぶよ</span></li>
-        <li><span class="ic">👆</span><span>がめんを よこに なぞると、とおくが みえるよ</span></li>
+        <li><span class="ic">🎁</span><span>かつと なかまを ひとり えらべるよ。レリックを あつめると もっと つよく なる</span></li>
+        <li><span class="ic">❤️</span><span>とりごやが こわれると ハートが へるよ。ハートが なくなったら おしまい</span></li>
       </ul>
-      <button id="playBtn" class="big" type="button">あそぶ！</button>
+      <button id="contBtn" class="big" type="button" hidden>つづきから</button>
+      <button id="playBtn" class="big" type="button">あたらしい ぼうけん</button>
       <p id="keyHint" class="keys" hidden>キーボード：1〜5 で なかま ／ E で えさばこ ／ スペース で コケコッコー！ ／ ← → で みる ばしょ ／ P で おやすみ</p>
     </div>
   </section>
 
-  <section id="selectScreen" class="overlay hidden">
+  <section id="mapScreen" class="overlay hidden">
+    <div class="card mapcard">
+      <div class="maphead">
+        <span id="mapHearts" class="pill hearts" aria-label="ハート"></span>
+        <span id="mapRelics" class="relics"></span>
+      </div>
+      <p id="relicTip" class="relic-tip"></p>
+      <div id="mapParty" class="party"></div>
+      <div id="mapBox" class="mapbox"></div>
+      <p class="legend">⚔️ たたかい　💥 つよい てき（レリックが もらえる）<br>☀️ ひとやすみ　🎁 たからばこ　🐻 ボス</p>
+      <button class="sub toTitle" type="button">タイトルに もどる</button>
+    </div>
+  </section>
+
+  <section id="pickScreen" class="overlay hidden">
     <div class="card">
-      <h2>どこで たたかう？</h2>
-      <div id="stageList" class="stages"></div>
-      <button id="toTitle" class="sub" type="button">タイトルに もどる</button>
+      <h2 id="pickTitle"></h2>
+      <p id="pickMsg" class="msg"></p>
+      <div id="pickList" class="picks"></div>
+      <button id="pickSkip" class="sub" type="button" hidden></button>
     </div>
   </section>
 
   <section id="winScreen" class="overlay hidden">
     <div class="card">
-      <div class="emoji">🎉</div>
-      <h2>かったよ！</h2>
-      <p id="winMsg" class="msg"></p>
-      <div id="winNew" class="newmate" hidden></div>
-      <button id="nextBtn" class="big" type="button">つぎの ステージへ</button>
-      <button class="sub toSelect" type="button">ステージを えらぶ</button>
+      <div class="emoji">🏆</div>
+      <h2>ボスを<br>やっつけた！</h2>
+      <p class="msg">ひよこの とりごやは<br>もう あんしんだね！</p>
+      <div id="winParty" class="party"></div>
+      <div id="winRelics" class="won"></div>
+      <button class="big newRun" type="button">もういちど ぼうけん</button>
+      <button class="sub toTitle" type="button">タイトルに もどる</button>
     </div>
   </section>
 
@@ -243,10 +287,12 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
     <div class="card">
       <div class="emoji">🐣</div>
       <h2>まけちゃった…</h2>
-      <p class="msg">とりごやが こわれちゃった。<br>つぎは きっと かてるよ！</p>
+      <p id="loseMsg" class="msg"></p>
       <p id="loseTip" class="tip"></p>
-      <button id="retryBtn" class="big" type="button">もういちど</button>
-      <button class="sub toSelect" type="button">ステージを えらぶ</button>
+      <button id="retryBtn" class="big loseAgain" type="button">もういちど たたかう</button>
+      <button id="backMapBtn" class="sub loseAgain" type="button">ちずに もどる</button>
+      <button class="big newRun loseOver" type="button">あたらしい ぼうけん</button>
+      <button class="sub toTitle loseOver" type="button">タイトルに もどる</button>
     </div>
   </section>
 
@@ -255,7 +301,8 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
       <div class="emoji">💤</div>
       <h2>おやすみ ちゅう</h2>
       <button id="resumeBtn" class="big" type="button">つづける</button>
-      <button class="sub toSelect" type="button">やめて ステージを えらぶ</button>
+      <button class="sub toTitle" type="button">やめて タイトルに もどる</button>
+      <p class="tip">つぎに つづきから あそぶと、この たたかいの まえから はじまるよ</p>
     </div>
   </section>
 </div>
@@ -293,15 +340,46 @@ const FOES = {
 // 絵の むき（1＝右むき、-1＝左むき）。なかまは 右へ、てきは 左へ すすむ
 const ART = { piyo: 1, kara: 1, haya: 1, mame: 1, kokko: 1, hebi: -1, karasu: -1, inoshishi: -1, kitsune: -1, kuma: -1 };
 
-// waves：[てき, さいしょに でる びょう, なんびょう ごとに でるか]。boss：[てき, HPの ばいりつ]（とりでの HP が 7わりを きると でる）
-const STAGES = [
-  { name: 'のはら',        len: 1200, base: 800,  theme: 'meadow',   unlock: 'haya',  waves: [['hebi', 3, 7]] },
-  { name: 'はたけ',        len: 1300, base: 1100, theme: 'farm',     unlock: 'mame',  waves: [['hebi', 2, 6], ['karasu', 12, 11]] },
-  { name: 'もり',          len: 1400, base: 1500, theme: 'forest',   unlock: 'kokko', waves: [['hebi', 2, 6], ['karasu', 10, 10], ['inoshishi', 25, 22]] },
-  { name: 'かわら',        len: 1450, base: 1900, theme: 'river',    waves: [['hebi', 2, 5], ['karasu', 8, 9], ['kitsune', 20, 18], ['inoshishi', 35, 26]], boss: ['inoshishi', 3] },
-  { name: 'やま',          len: 1500, base: 2400, theme: 'mountain', waves: [['karasu', 2, 7], ['inoshishi', 14, 16], ['kitsune', 18, 15]], boss: ['kitsune', 3] },
-  { name: 'クマの とりで', len: 1600, base: 3000, theme: 'fort',     waves: [['hebi', 1, 7], ['karasu', 6, 11], ['inoshishi', 15, 24], ['kitsune', 22, 20]], boss: ['kuma', 1] }
-];
+const LV_MUL = [0, 1, 1.4, 1.9];  // なかまの レベル（1〜3）ごとの HP と こうげきの ばいりつ
+const START_PARTY = { piyo: 1, kara: 1 };
+const START_HEARTS = 3, MAX_HEARTS = 5;   // まけると ハートが へる。なくなったら ぼうけんは おしまい
+
+// ちず：FLOORS だん（下から上へ すすむ）の あと、さいごに ボス。よこは COLS れつ
+const FLOORS = 8, COLS = 4, ROW_H = 64;
+const FOE_GROW = 0.08;   // 1だん すすむごとに てきが つよく なる わりあい
+const NODES = { fight: '⚔️', elite: '💥', rest: '☀️', chest: '🎁', boss: '🐻' };
+const THEME_ROW = ['meadow', 'meadow', 'farm', 'farm', 'forest', 'river', 'river', 'mountain'];  // だんごとの けしき
+const THEME_NAME = { meadow: 'のはら', farm: 'はたけ', forest: 'もり', river: 'かわら', mountain: 'やま', fort: 'クマの とりで' };
+
+// レリック：もっている あいだ ずっと きく。mod の かけざん（startGrain と home は たしざん）は runMods() で まとめる。heart は もらった ときに ハートが ふえる
+const RELICS = {
+  basket: { icon: '🧺', name: 'きんの えさばこ',     desc: 'つぶが 3わり はやく たまる',             mod: { grainRate: 1.3 } },
+  bento:  { icon: '🍙', name: 'おべんとう',           desc: 'さいしょの つぶが 150 ふえる',           mod: { startGrain: 150 } },
+  shell:  { icon: '🥚', name: 'かたい からの かけら', desc: 'なかまの HPが 3わり ふえる',             mod: { hp: 1.3 } },
+  pepper: { icon: '🌶️', name: 'げきから とうがらし', desc: 'なかまの こうげきが 3わり つよく なる',   mod: { atk: 1.3 } },
+  shoes:  { icon: '👟', name: 'はやい くつ',          desc: 'なかまが はやく あるく',                 mod: { speed: 1.3 } },
+  clock:  { icon: '⏰', name: 'めざまし どけい',      desc: 'コケコッコー！が はやく たまる',         mod: { cannonCd: 0.65 } },
+  horn:   { icon: '📢', name: 'おおきな メガホン',    desc: 'コケコッコー！が 2ばい つよい',          mod: { cannonDmg: 2 } },
+  clover: { icon: '🍀', name: 'よつばの クローバー',  desc: 'てきを おいかえすと もらえる つぶが 2ばい', mod: { reward: 2 } },
+  bell:   { icon: '🔔', name: 'よびだし ベル',        desc: 'なかまを つぎに だせるまでが はやい',     mod: { cd: 0.65 } },
+  coupon: { icon: '🎫', name: 'わりびき けん',        desc: 'なかまを だす つぶが 2わり やすい',      mod: { cost: 0.8 } },
+  jar:    { icon: '🏺', name: 'おおきな つぼ',        desc: 'つぶを たくさん ためられる',             mod: { grainMax: 1.5 } },
+  brick:  { icon: '🧱', name: 'れんがの かべ',        desc: 'とりごやの HPが 400 ふえる',             mod: { home: 400 } },
+  charm:  { icon: '💝', name: 'ハートの おまもり',    desc: 'ハートが 1つ ふえる',                    mod: {}, heart: 1 }
+};
+
+// r だんめの たたかい。waves：[てき, さいしょに でる びょう, なんびょう ごとに でるか]。
+// boss：[てき, HPの ばいりつ]（とりでの HP が 7わりを きると でる）。だんが すすむほど てきが ふえて とりでが かたくなり、
+// てきの HP と こうげきが pow ばいに なる（ボスの ステージは pow なし）
+function battleDef(r, kind) {
+  if (kind === 'boss') return { len: 1600, base: 3000, theme: 'fort', waves: [['hebi', 1, 7], ['karasu', 6, 11], ['inoshishi', 15, 24], ['kitsune', 22, 20]], boss: ['kuma', 1] };
+  const waves = [['hebi', 2, Math.max(4, 7 - r * 0.4)]];
+  if (r >= 1) waves.push(['karasu', 10, Math.max(7, 11.5 - r * 0.5)]);
+  if (r >= 2) waves.push(['inoshishi', 22, Math.max(14, 24 - r)]);
+  if (r >= 4) waves.push(['kitsune', 24, Math.max(13, 22 - r)]);
+  const elite = kind === 'elite';
+  return { len: 1200 + r * 40, base: Math.round((700 + r * 220) * (elite ? 1.3 : 1)), theme: THEME_ROW[r], waves, boss: elite ? [r < 4 ? 'inoshishi' : 'kitsune', 3] : null, pow: 1 + r * FOE_GROW };
+}
 // えさばこ：1びょうに ふえる つぶ、ためられる つぶ、つぎの レベルへの ねだん
 const PURSE = [
   { rate: 14, max: 300,  up: 80 },
@@ -332,10 +410,13 @@ const canvas = $('game'), ctx = canvas.getContext('2d'), stageBox = $('stage');
 const els = {
   grain: $('grainN'), grainMax: $('grainMax'), stageName: $('stageName'), mute: $('mute'), pause: $('pauseBtn'),
   purse: $('btnPurse'), purseLv: $('purseLv'), purseCost: $('purseCost'), cannon: $('btnCannon'), cannonTip: $('cannonTip'),
-  units: Array.from(document.querySelectorAll('.unit')), heroArt: $('heroArt'), keyHint: $('keyHint'),
-  stageList: $('stageList'), winMsg: $('winMsg'), winNew: $('winNew'), nextBtn: $('nextBtn'), loseTip: $('loseTip')
+  units: Array.from(document.querySelectorAll('.unit')), heroArt: $('heroArt'), keyHint: $('keyHint'), play: $('playBtn'), cont: $('contBtn'),
+  mapHearts: $('mapHearts'), mapRelics: $('mapRelics'), relicTip: $('relicTip'), mapParty: $('mapParty'), mapBox: $('mapBox'),
+  pickTitle: $('pickTitle'), pickMsg: $('pickMsg'), pickList: $('pickList'), pickSkip: $('pickSkip'),
+  winParty: $('winParty'), winRelics: $('winRelics'), loseMsg: $('loseMsg'), loseTip: $('loseTip'),
+  loseAgain: Array.from(document.querySelectorAll('.loseAgain')), loseOver: Array.from(document.querySelectorAll('.loseOver'))
 };
-const OVERLAYS = ['titleScreen', 'selectScreen', 'winScreen', 'loseScreen', 'pauseScreen'];
+const OVERLAYS = ['titleScreen', 'mapScreen', 'pickScreen', 'winScreen', 'loseScreen', 'pauseScreen'];
 
 // ===================== UTILS =====================
 const TAU = Math.PI * 2, FONT = '"Mochiy Pop One","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif';
@@ -343,18 +424,20 @@ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const rnd = (a, b) => a + Math.random() * (b - a);
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 function setText(el, v) { v = String(v); if (el._t !== v) { el._t = v; el.textContent = v; } }
+function shuffle(a, rand) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ===================== SAVE =====================
-// cleared＝クリアした ステージの 数。ステージを クリアすると unlock の なかまが ふえる
-const SAVE_KEY = 'hiyoko-daisenso-v1';
-let cleared = 0;
-try { const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); if (s && s.v === 1) cleared = s.cleared | 0; } catch (_) {}
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: 1, cleared })); } catch (_) {} }
-const unlocked = k => k === 'piyo' || k === 'kara' || STAGES.slice(0, cleared).some(s => s.unlock === k);
+// いまの ぼうけん（run）を まるごと しまう。マスを おえるたびに しまうので、たたかいの とちゅうで やめると その まえから やりなおし
+const SAVE_KEY = 'hiyoko-daisenso-v2';
+function saveRun() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(run)); } catch (_) {} }
+function loadRun() { try { const r = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return r && r.v === 2 ? r : null; } catch (_) { return null; } }
+function clearRun() { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} }
 
 // ===================== STATE =====================
-let mode = 'title';   // title / select / playing / paused / win / lose
+let mode = 'title';   // title / map / pick / playing / paused / win / lose
+let run = null;       // いまの ぼうけん：ちず、とおった マス（path）、とりごやの HP、なかまの レベル（party）、レリック
 let G = null;         // いまの たたかい（newBattle が作る）
+let picks = [];       // えらぶ がめんに 出ている こうほ（{ go }）。picks.skip は「えらばない」
 const keys = {}, drag = { id: null, x: 0 };
 
 // ===================== SOUND =====================
@@ -433,68 +516,215 @@ function focusX() {
 function mmRect() { const w = Math.min(W - 24, 420); return { x: (W - w) / 2, y: 10, w, h: 16 }; }
 
 // ===================== FLOW =====================
-function newBattle(i) {
-  const st = STAGES[i];
+// st＝battleDef() の たたかい、info＝{ node, kind, r }（タイトルの うしろの けしきでは null）
+function newBattle(st, info) {
+  const m = runMods(), hp = HOME_HP + m.home;
   G = {
-    idx: i, st, len: st.len, t: 0, grain: START_GRAIN, purse: 0, cannon: 0, cool: {}, ents: [], shots: [], fx: [],
-    cam: 0, hold: 0, lastHit: 0, home: { hp: HOME_HP, max: HOME_HP, hit: 0 }, foe: { hp: st.base, max: st.base, hit: 0 },
+    st, info, mods: m, len: st.len, t: 0, grain: START_GRAIN + m.startGrain, purse: 0, cannon: 0, cannonCd: CANNON_CD * m.cannonCd,
+    cool: {}, ents: [], shots: [], fx: [], cam: 0, hold: 0, lastHit: 0,
+    home: { hp, max: hp, hit: 0 }, foe: { hp: st.base, max: st.base, hit: 0 },
     waves: st.waves.map(([type, first, every]) => ({ type, next: first, every })),
-    bossOut: false, result: null, endT: 0, newUnit: null, banner: null, deco: makeDeco(i)
+    bossOut: false, result: null, endT: 0, banner: null, deco: makeDeco(st, (info ? info.r : 0) * 977 + 13),
+    slots: UNIT_ORDER.filter(k => run && run.party[k])   // ボタンに ならべる なかま
   };
 }
 function showOverlay(id) { for (const o of OVERLAYS) $(o).classList.toggle('hidden', o !== id); }
-function startStage(i) {
-  newBattle(i); mode = 'playing'; showOverlay(null);
+function startBattle(node, kind) {
+  const r = node === 'boss' ? FLOORS : run.map.nodes[node].r;
+  newBattle(battleDef(r, kind), { node, kind, r });
+  mode = 'playing'; showOverlay(null);
   setupUnitButtons();
-  els.stageName.textContent = (i + 1) + '. ' + G.st.name;
-  banner('スタート！'); sfx.start();
+  els.stageName.textContent = NODES[kind] + ' ' + THEME_NAME[G.st.theme] + '　' + '❤️'.repeat(run.hearts);
+  banner(kind === 'boss' ? 'ボスの とりでだ！' : 'スタート！'); sfx.start();
   hudUpdate();
 }
-function openSelect() {
-  mode = 'select';
-  els.stageList.innerHTML = STAGES.map((s, i) => {
-    const lock = i > cleared, done = i < cleared;
-    return '<button class="stg" type="button" data-i="' + i + '"' + (lock ? ' disabled' : '') + '><span class="no">' + (i + 1) + '</span>' +
-      '<span class="nm">' + s.name + '<small>' + (done ? 'クリア！' : lock ? 'まえの ステージを クリアしてね' : 'つぎは ここ！') + '</small></span>' +
-      '<span class="mk">' + (done ? '⭐' : lock ? '🔒' : '▶️') + '</span></button>';
-  }).join('');
-  showOverlay('selectScreen');
+function openTitle() {
+  mode = 'title'; showOverlay('titleScreen'); drawHero();
+  els.cont.hidden = !loadRun();
+  armed = false; els.play.textContent = 'あたらしい ぼうけん';
 }
-function openTitle() { mode = 'title'; showOverlay('titleScreen'); drawHero(); }
 function pause() { if (mode !== 'playing' || G.result) return; mode = 'paused'; showOverlay('pauseScreen'); }
 function resume() { if (mode !== 'paused') return; mode = 'playing'; showOverlay(null); }
 function end(r) {
   G.result = r; G.endT = 1.6;
   for (const e of G.ents) if (e.st !== 'gone' && e.side === (r === 'win' ? 'foe' : 'ally')) defeat(e, true);
-  if (r === 'win') {
-    const u = G.st.unlock;
-    if (u && !unlocked(u)) G.newUnit = u;
-    if (G.idx + 1 > cleared) { cleared = G.idx + 1; save(); }
-    banner('やったー！'); sfx.win();
-  } else { banner('あぁっ…'); sfx.lose(); }
+  if (r === 'win') { banner('やったー！'); sfx.win(); } else { banner('あぁっ…'); sfx.lose(); }
 }
+// たたかいの あと：まけたら ハートが へる（なくなったら ぼうけんは おしまい）。
+// かったら マスを すすめて、なかま（つよい てきなら さきに レリック）を えらぶ
 function finish() {
-  mode = G.result;
-  if (mode === 'win') {
-    const last = G.idx === STAGES.length - 1;
-    els.winMsg.innerHTML = last ? 'ぜんぶの ステージを クリア！<br>ひよこの とりごやは もう あんしんだね！' : '「' + G.st.name + '」を クリアしたよ！';
-    els.winNew.hidden = !G.newUnit;
-    if (G.newUnit) { const u = UNITS[G.newUnit]; els.winNew.innerHTML = unitIcon(G.newUnit) + '<span>あたらしい なかま<br><b>' + u.name + '</b> が きたよ！<small>' + u.desc + '</small></span>'; }
-    els.nextBtn.hidden = last;
-  } else els.loseTip.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
-  showOverlay(mode + 'Screen');
+  const { node, kind } = G.info;
+  if (G.result === 'lose') {
+    run.hearts--; mode = 'lose';
+    const over = run.hearts <= 0;
+    if (over) clearRun(); else saveRun();
+    els.loseMsg.innerHTML = over ? 'ハートが なくなっちゃった。<br><b>' + run.path.length + '</b> マス すすんだよ！'
+      : 'とりごやが こわれて ハートが へっちゃった。<br>のこりの ハート ' + '❤️'.repeat(run.hearts);
+    els.loseTip.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
+    for (const b of els.loseAgain) b.hidden = over;
+    for (const b of els.loseOver) b.hidden = !over;
+    showOverlay('loseScreen');
+    return;
+  }
+  arrive(node);
+  if (kind === 'boss') {
+    clearRun(); mode = 'win';
+    els.winParty.innerHTML = partyHtml();
+    els.winRelics.innerHTML = run.relics.map(k => RELICS[k].icon).join('');
+    showOverlay('winScreen');
+    return;
+  }
+  const next = () => offerMates(openMap);
+  if (kind === 'elite') giveRelic(next); else next();
 }
 function banner(s) { G.banner = { s, t: 0 }; }
+
+// ===================== RUN =====================
+function newRun() {
+  const seed = 1 + Math.floor(Math.random() * 2147483640);
+  run = { v: 2, seed, map: makeMap(seeded(seed)), path: [], hearts: START_HEARTS, party: Object.assign({}, START_PARTY), relics: [] };
+  saveRun();
+}
+function runMods() {
+  const m = { grainRate: 1, grainMax: 1, startGrain: 0, home: 0, hp: 1, atk: 1, speed: 1, cannonCd: 1, cannonDmg: 1, reward: 1, cd: 1, cost: 1 };
+  for (const k of run ? run.relics : []) for (const p in RELICS[k].mod) m[p] = p === 'startGrain' || p === 'home' ? m[p] + RELICS[k].mod[p] : m[p] * RELICS[k].mod[p];
+  return m;
+}
+// 4本の みちを 下から 上へ ランダムに のばして、とおった ところを マスに する。となりの みちと ×に こうさ しないように する
+function makeMap(rand) {
+  const nodes = [], edges = [], idx = {};
+  const at = (r, c) => { const k = r * COLS + c; if (!(k in idx)) { idx[k] = nodes.length; nodes.push({ r, c }); } return idx[k]; };
+  const has = (a, b) => edges.some(e => e[0] === a && e[1] === b);
+  const starts = shuffle([0, 1, 2, 3], rand).slice(0, 3).concat(Math.floor(rand() * COLS));
+  for (let c of starts) {
+    for (let r = 0; r < FLOORS - 1; r++) {
+      let n = clamp(c + Math.floor(rand() * 3) - 1, 0, COLS - 1);
+      const side = idx[r * COLS + n], up = idx[(r + 1) * COLS + c];
+      if (n !== c && side !== undefined && up !== undefined && has(side, up)) n = c;
+      const a = at(r, c), b = at(r + 1, n);
+      if (!has(a, b)) edges.push([a, b]);
+      c = n;
+    }
+  }
+  for (const n of nodes) {
+    const x = rand();
+    n.t = n.r === 0 ? 'fight' : n.r === 3 ? 'chest' : n.r === FLOORS - 1 ? 'rest'
+      : n.r >= 2 && x < 0.2 ? 'elite' : n.r >= 4 && x < 0.38 ? 'rest' : 'fight';
+  }
+  return { nodes, edges };
+}
+const here = () => run.path.length ? run.path[run.path.length - 1] : -1;
+function nextNodes() {
+  const h = here();
+  if (h === -1) return run.map.nodes.map((n, i) => i).filter(i => run.map.nodes[i].r === 0);
+  if (h === 'boss') return [];
+  if (run.map.nodes[h].r === FLOORS - 1) return ['boss'];
+  return run.map.edges.filter(e => e[0] === h).map(e => e[1]);
+}
+function arrive(node) { run.path.push(node); saveRun(); }
+function goNode(node) {
+  const kind = node === 'boss' ? 'boss' : run.map.nodes[node].t;
+  if (kind === 'chest') { arrive(node); giveRelic(openMap); }
+  else if (kind === 'rest') openRest(node);
+  else startBattle(node, kind);
+}
+// えらぶ がめん（なかま・レリック・ひとやすみ）。items：[{ html, go }]、skip：[ラベル, go] か null
+function choose(title, msg, items, skip) {
+  mode = 'pick'; picks = items; picks.skip = skip && skip[1];
+  els.pickTitle.textContent = title; els.pickMsg.innerHTML = msg;
+  els.pickList.innerHTML = '';
+  for (const it of items) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.innerHTML = it.html;
+    b.addEventListener('click', () => { ensureAudio(); if (picks.includes(it)) it.go(); });
+    els.pickList.appendChild(b);
+  }
+  els.pickSkip.hidden = !skip;
+  if (skip) els.pickSkip.textContent = skip[0];
+  showOverlay('pickScreen');
+}
+function mateCard(k) {
+  const u = UNITS[k], lv = run.party[k] || 0;
+  return unitIcon(k) + '<span><b>' + u.name + '</b><em>' + (lv ? 'Lv' + lv + ' → Lv' + (lv + 1) + ' つよく なる！' : 'あたらしい なかま！') + '</em><small>' + u.desc + '</small></span>';
+}
+// なかまを 3にんから ひとり：まだ いない なかまか、いる なかまの レベルアップ
+function offerMates(then) {
+  const ks = shuffle(UNIT_ORDER.filter(k => (run.party[k] || 0) < 3), Math.random).slice(0, 3);
+  if (!ks.length) { then(); return; }
+  choose('なかまを えらぼう', 'ひとり えらんでね', ks.map(k => ({
+    html: mateCard(k), go: () => { run.party[k] = (run.party[k] || 0) + 1; sfx.up(); saveRun(); then(); }
+  })), ['えらばない', then]);
+}
+function giveRelic(then) {
+  const pool = Object.keys(RELICS).filter(k => !run.relics.includes(k));
+  if (!pool.length) { then(); return; }
+  const k = pool[Math.floor(Math.random() * pool.length)], R = RELICS[k];
+  run.relics.push(k);
+  if (R.heart) run.hearts = Math.min(MAX_HEARTS, run.hearts + R.heart);
+  saveRun(); sfx.up();
+  choose('レリックを みつけた！', 'もっていると ずっと きく ふしぎな どうぐだよ', [{
+    html: '<span class="ri">' + R.icon + '</span><span><b>' + R.name + '</b><small>' + R.desc + '</small><em>おして すすむ</em></span>', go: then
+  }], null);
+}
+function openRest(node) {
+  const done = () => { arrive(node); openMap(); };
+  const strong = UNIT_ORDER.filter(k => run.party[k] && run.party[k] < 3);
+  const items = [];
+  if (run.hearts < MAX_HEARTS) items.push({
+    html: '<span class="ri">❤️</span><span><b>ひなたぼっこ</b><small>ハートが 1つ ふえる（' + MAX_HEARTS + 'つ まで）</small></span>',
+    go: () => { run.hearts++; sfx.up(); done(); }
+  });
+  if (strong.length) items.push({
+    html: '<span class="ri">💪</span><span><b>とっくん</b><small>なかまを ひとり つよく する</small></span>',
+    go: () => choose('だれを つよく する？', '', strong.map(k => ({ html: mateCard(k), go: () => { run.party[k]++; sfx.up(); done(); } })), ['もどる', () => openRest(node)])
+  });
+  if (!items.length) { done(); return; }
+  choose('ひとやすみ', 'どっちに する？', items, null);
+}
+function partyHtml() {
+  return UNIT_ORDER.filter(k => run.party[k]).map(k => '<span class="mate">' + unitIcon(k) + 'Lv' + run.party[k] + '</span>').join('');
+}
+function openMap() {
+  mode = 'map';
+  setText(els.mapHearts, '❤️'.repeat(run.hearts) + '🤍'.repeat(Math.max(0, START_HEARTS - run.hearts)));
+  els.mapRelics.innerHTML = run.relics.length ? run.relics.map(k => '<button class="relic" type="button" data-k="' + k + '" aria-label="' + RELICS[k].name + '">' + RELICS[k].icon + '</button>').join('') : '<small>レリック なし</small>';
+  els.relicTip.textContent = '';
+  els.mapParty.innerHTML = partyHtml();
+  // マスの いち：よこは %、たては 下から（ボスが いちばん 上）。すこし ずらして 手がきの ちずっぽく
+  const full = (FLOORS + 1) * ROW_H + 56, nodes = run.map.nodes;
+  const pos = i => i === 'boss' ? { x: 50, y: 44 } : { x: 12 + (nodes[i].c + 0.5) / COLS * 76 + ((nodes[i].r * 7 + nodes[i].c * 13) % 5 - 2) * 2, y: full - 44 - nodes[i].r * ROW_H };
+  const nav = nextNodes(), h = here(), path = run.path;
+  const steps = new Set(path.map((p, j) => (j ? path[j - 1] : -1) + '>' + p));
+  const lines = run.map.edges.map(e => [e[0], e[1]]).concat(nodes.map((n, i) => i).filter(i => nodes[i].r === FLOORS - 1).map(i => [i, 'boss']));
+  let svg = '<svg viewBox="0 0 100 ' + full + '" preserveAspectRatio="none" aria-hidden="true">';
+  for (const [a, b] of lines) {
+    const p = pos(a), q = pos(b), cls = steps.has(a + '>' + b) ? 'done' : a === h && nav.includes(b) ? 'next' : '';
+    svg += '<line class="' + cls + '" x1="' + p.x + '" y1="' + p.y + '" x2="' + q.x + '" y2="' + q.y + '"/>';
+  }
+  svg += '</svg>';
+  const btn = i => {
+    const t = i === 'boss' ? 'boss' : nodes[i].t, p = pos(i);
+    const cls = 'node' + (i === 'boss' ? ' boss' : '') + (nav.includes(i) ? ' avail' : path.includes(i) ? ' done' : '') + (i === h ? ' here' : '');
+    return '<button class="' + cls + '" type="button" data-i="' + i + '" style="left:' + p.x + '%;top:' + p.y + 'px">' + NODES[t] + '</button>';
+  };
+  els.mapBox.innerHTML = '<div class="mapin" style="height:' + full + 'px">' + svg + nodes.map((n, i) => btn(i)).join('') + btn('boss') + '</div>';
+  showOverlay('mapScreen');
+  // いま すすめる マスが 下の ほうに 見えるように スクロール
+  const ys = nav.map(i => pos(i).y);
+  els.mapBox.scrollTop = ys.length ? Math.max(...ys) - els.mapBox.clientHeight * 0.65 : 0;
+}
 
 // ===================== ENTITIES =====================
 function spawn(side, type, mul) {
   let n = 0;
   for (const e of G.ents) if (e.side === side && e.st !== 'gone') n++;
   if (n >= MAX_SIDE) return null;
-  const ally = side === 'ally', d = ally ? UNITS[type] : FOES[type], boss = !!mul;
+  const ally = side === 'ally', d = ally ? UNITS[type] : FOES[type], boss = !!mul, m = G.mods;
+  const lv = ally ? run.party[type] : 1, k = ally ? LV_MUL[lv] : 1;   // なかまは レベルと レリックで つよく なる
   const e = {
-    side, type, d, boss, dir: ally ? 1 : -1, x: ally ? homeFace() + 6 : foeFace() - 6, z: rnd(-5, 9), s: boss ? 1.3 : 1,
-    max: d.hp * (mul || 1), atk: d.atk * (boss ? 1.5 : 1), kbLeft: d.kb, st: 'walk', cd: 0, t: rnd(0, 9), hit: 0, lunge: 0, kbT: 0
+    side, type, d, boss, dir: ally ? 1 : -1, x: ally ? homeFace() + 6 : foeFace() - 6, z: rnd(-5, 9), s: boss ? 1.3 : 1 + (lv - 1) * 0.1,
+    max: d.hp * (mul || 1) * k * (ally ? m.hp : G.st.pow || 1), atk: d.atk * (boss ? 1.5 : 1) * k * (ally ? m.atk : G.st.pow || 1), speed: d.speed * (ally ? m.speed : 1),
+    kbLeft: d.kb, st: 'walk', cd: 0, t: rnd(0, 9), hit: 0, lunge: 0, kbT: 0
   };
   e.hp = e.max;
   G.ents.push(e);
@@ -512,13 +742,16 @@ function target(e) {
 }
 
 // ===================== ACTIONS =====================
+const unitCost = k => Math.round(UNITS[k].cost * G.mods.cost / 5) * 5;
+const unitCd = k => UNITS[k].cd * G.mods.cd;
+const purseRate = () => PURSE[G.purse].rate * G.mods.grainRate;
+const purseMax = () => Math.round(PURSE[G.purse].max * G.mods.grainMax);
 function deploy(i) {
   if (mode !== 'playing' || G.result) return;
-  const k = UNIT_ORDER[i];
-  if (!k || !unlocked(k)) return;
-  const u = UNITS[k];
-  if (G.grain < u.cost || G.cool[k] > 0 || !spawn('ally', k)) { sfx.no(); return; }
-  G.grain -= u.cost; G.cool[k] = u.cd; sfx.deploy();
+  const k = G.slots[i];
+  if (!k) return;
+  if (G.grain < unitCost(k) || G.cool[k] > 0 || !spawn('ally', k)) { sfx.no(); return; }
+  G.grain -= unitCost(k); G.cool[k] = unitCd(k); sfx.deploy();
 }
 function upgradePurse() {
   if (mode !== 'playing' || G.result) return;
@@ -529,7 +762,7 @@ function upgradePurse() {
 }
 function fireCannon() {
   if (mode !== 'playing' || G.result) return;
-  if (G.cannon < CANNON_CD) { sfx.no(); return; }
+  if (G.cannon < G.cannonCd) { sfx.no(); return; }
   G.cannon = 0; sfx.cannon(); banner('コケコッコー！');
   G.fx.push({ k: 'wave', x: HOME_X + 20, y: GROUND - 70, t: 0, life: WAVE_T, hit: new Set() });
 }
@@ -537,7 +770,7 @@ function fireCannon() {
 function waveHit(f) {
   const front = f.x + (f.t / f.life) * G.len;
   for (const e of G.ents) if (e.side === 'foe' && e.st !== 'gone' && e.x <= front && !f.hit.has(e)) {
-    f.hit.add(e); damage(e, CANNON_DMG);
+    f.hit.add(e); damage(e, CANNON_DMG * G.mods.cannonDmg);
     if (e.st !== 'gone') { e.st = 'kb'; e.kbT = KB_T; }
   }
 }
@@ -570,8 +803,9 @@ function defeat(o, quiet) {
   if (quiet) return;
   sfx.pop();
   if (o.side === 'foe') {
-    G.grain = Math.min(PURSE[G.purse].max, G.grain + o.d.grain);
-    pop('🌾+' + o.d.grain, o.x, feetY(o) - o.d.h * o.s - 10);
+    const n = Math.round(o.d.grain * G.mods.reward);
+    G.grain = Math.min(purseMax(), G.grain + n);
+    pop('🌾+' + n, o.x, feetY(o) - o.d.h * o.s - 10);
   }
 }
 function hitBase(side, n) {
@@ -587,10 +821,9 @@ function pop(s, x, y) { G.fx.push({ k: 'text', s, x, y, t: 0, life: 1.1 }); }
 function update(dt) {
   if (mode !== 'playing') return;
   G.t += dt;
-  const P = PURSE[G.purse];
-  G.grain = Math.min(P.max, G.grain + P.rate * dt);
+  G.grain = Math.min(purseMax(), G.grain + purseRate() * dt);
   for (const k in G.cool) G.cool[k] = Math.max(0, G.cool[k] - dt);
-  if (G.cannon < CANNON_CD) { G.cannon = Math.min(CANNON_CD, G.cannon + dt); if (G.cannon === CANNON_CD) sfx.ready(); }
+  if (G.cannon < G.cannonCd) { G.cannon = Math.min(G.cannonCd, G.cannon + dt); if (G.cannon === G.cannonCd) sfx.ready(); }
   if (!G.result) {
     for (const w of G.waves) if (G.t >= w.next) { w.next += w.every; spawn('foe', w.type); }
     if (G.st.boss && !G.bossOut && G.foe.hp <= G.foe.max * 0.7) {
@@ -624,7 +857,7 @@ function step(e, dt) {
   if (tg.dist <= e.d.range) {
     if (e.st !== 'atk') { e.st = 'atk'; e.cd = 0.3; }
     if ((e.cd -= dt) <= 0) { strike(e, tg); e.cd = e.d.rate; e.lunge = LUNGE_T; }
-  } else { e.st = 'walk'; e.x += e.dir * e.d.speed * dt; }
+  } else { e.st = 'walk'; e.x += e.dir * e.speed * dt; }
 }
 
 // ===================== DRAW HELPERS =====================
@@ -691,8 +924,8 @@ function drawBlob(g, col, h, chick) {
 }
 
 // ===================== FIELD DRAWING =====================
-function makeDeco(i) {
-  const r = seeded(i * 977 + 13), out = [], L = STAGES[i].len, kind = THEMES[STAGES[i].theme].deco;
+function makeDeco(st, seed) {
+  const r = seeded(seed), out = [], L = st.len, kind = THEMES[st.theme].deco;
   const cols = ['#ff8fb1', '#ffffff', '#ffd23f', '#a98bff'];
   for (let x = 160 + r() * 60; x < L - 160; x += 70 + r() * 90) out.push({ k: kind, x, y: 226 + r() * 8, s: 0.8 + r() * 0.5, c: cols[Math.floor(r() * 4)] });
   for (let x = r() * 40; x < L; x += 40 + r() * 60) out.push({ k: r() < 0.3 ? 'flower' : 'tuft', x, y: 278 + r() * 16, s: 0.7 + r() * 0.4, c: cols[Math.floor(r() * 4)] });
@@ -894,27 +1127,28 @@ function drawHero() {
 // ===================== HUD =====================
 function setupUnitButtons() {
   els.units.forEach((el, i) => {
-    const k = UNIT_ORDER[i], on = unlocked(k), u = UNITS[k];
-    el.classList.toggle('locked', !on);
-    el.querySelector('.uimg').innerHTML = on ? unitIcon(k) : '🔒';
-    el.querySelector('.ucost').textContent = on ? '🌾' + u.cost : '';
-    el.setAttribute('aria-label', on ? u.name + '（つぶ ' + u.cost + '）' : 'まだ いないよ');
+    const k = G.slots[i], lv = k ? run.party[k] : 0;
+    el.classList.toggle('empty', !k);
+    el.querySelector('.uimg').innerHTML = k ? unitIcon(k) : '';
+    el.querySelector('.ucost').textContent = k ? '🌾' + unitCost(k) : '';
+    el.querySelector('.ulv').textContent = lv > 1 ? 'Lv' + lv : '';
+    el.setAttribute('aria-label', k ? UNITS[k].name + ' Lv' + lv + '（つぶ ' + unitCost(k) + '）' : 'まだ いないよ');
   });
 }
 function hudUpdate() {
   const g = Math.floor(G.grain), P = PURSE[G.purse];
-  setText(els.grain, g); setText(els.grainMax, P.max);
+  setText(els.grain, g); setText(els.grainMax, purseMax());
   els.units.forEach((el, i) => {
-    const k = UNIT_ORDER[i], u = UNITS[k];
-    el.classList.toggle('poor', unlocked(k) && g < u.cost);
-    el.style.setProperty('--cd', ((G.cool[k] || 0) / u.cd).toFixed(3));
+    const k = G.slots[i];
+    el.classList.toggle('poor', !!k && g < unitCost(k));
+    el.style.setProperty('--cd', k ? ((G.cool[k] || 0) / unitCd(k)).toFixed(3) : '0');
   });
   setText(els.purseLv, 'Lv' + (G.purse + 1));
   setText(els.purseCost, P.up ? '🌾' + P.up + ' で おおきく' : 'いちばん おおきい！');
   els.purse.classList.toggle('poor', !P.up || g < P.up);
-  const ready = G.cannon >= CANNON_CD;
+  const ready = G.cannon >= G.cannonCd;
   els.cannon.classList.toggle('ready', ready);
-  els.cannon.style.setProperty('--fill', (G.cannon / CANNON_CD).toFixed(3));
+  els.cannon.style.setProperty('--fill', (G.cannon / G.cannonCd).toFixed(3));
   setText(els.cannonTip, ready ? 'いまだ！ おしてね' : 'ためているよ');
 }
 
@@ -970,14 +1204,33 @@ window.addEventListener('keyup', e => { keys[(e.key || '').toLowerCase()] = fals
 window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
-$('playBtn').addEventListener('click', () => { ensureAudio(); openSelect(); });
-$('toTitle').addEventListener('click', openTitle);
-els.stageList.addEventListener('click', e => { const b = e.target.closest('.stg'); if (b && !b.disabled) { ensureAudio(); startStage(+b.dataset.i); } });
-els.nextBtn.addEventListener('click', () => startStage(G.idx + 1));
-$('retryBtn').addEventListener('click', () => startStage(G.idx));
+// セーブが あるときの「あたらしい ぼうけん」は、2かい おして はじめて けす
+let armed = false;
+els.play.addEventListener('click', () => {
+  ensureAudio();
+  if (loadRun() && !armed) {
+    armed = true; els.play.textContent = 'ほんとうに はじめから？ もういちど おしてね';
+    setTimeout(() => { if (mode === 'title' && armed) openTitle(); }, 3500);
+    return;
+  }
+  newRun(); openMap();
+});
+els.cont.addEventListener('click', () => { ensureAudio(); run = loadRun(); if (run) openMap(); });
+els.mapBox.addEventListener('click', e => {
+  const b = e.target.closest('.node.avail');
+  if (b) { ensureAudio(); goNode(b.dataset.i === 'boss' ? 'boss' : +b.dataset.i); }
+});
+els.mapRelics.addEventListener('click', e => {
+  const b = e.target.closest('.relic');
+  if (b) { const R = RELICS[b.dataset.k]; els.relicTip.textContent = R.icon + ' ' + R.name + '：' + R.desc; }
+});
+els.pickSkip.addEventListener('click', () => { if (picks.skip) picks.skip(); });
 $('resumeBtn').addEventListener('click', resume);
 els.pause.addEventListener('click', pause);
-document.querySelectorAll('.toSelect').forEach(b => b.addEventListener('click', openSelect));
+document.querySelectorAll('.toTitle').forEach(b => b.addEventListener('click', openTitle));
+$('retryBtn').addEventListener('click', () => { ensureAudio(); startBattle(G.info.node, G.info.kind); });
+$('backMapBtn').addEventListener('click', openMap);
+document.querySelectorAll('.newRun').forEach(b => b.addEventListener('click', () => { ensureAudio(); newRun(); openMap(); }));
 function setMuteIcon() {
   els.mute.textContent = muted ? '🔇' : '🔊';
   els.mute.setAttribute('aria-label', muted ? 'おとを だす' : 'おとを けす');
@@ -995,7 +1248,7 @@ window.addEventListener('resize', resize);
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(resize).observe(stageBox);
 resize();
 setMuteIcon();
-newBattle(0);        // タイトルの うしろに さいしょの ステージの けしきを 出しておく
+newBattle(battleDef(0, 'fight'), null);   // タイトルの うしろに のはらの けしきを 出しておく
 setupUnitButtons();
 hudUpdate();
 openTitle();
