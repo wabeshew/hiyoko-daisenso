@@ -8,7 +8,7 @@ import base64, pathlib, re, struct, subprocess, tempfile, zlib
 ART = pathlib.Path(__file__).parent
 HTML = ART.parent / 'index.html'
 WIDTH = 264  # ゲームではこの半分くらいの大きさで描くので、高解像度の画面でもくっきり見える
-WIDE = {"koya": 400, "toride": 400}  # とりごやと とりでは 大きく描くので、横はばを広くとる
+WIDE = {"shiro": 400, "toride": 400, "cowboy": 340, "shark": 340, "drake": 340, "knight": 340, "king": 360}  # おしろ・とりでと のりものに のった なかまは 大きく描くので、横はばを広くとる
 
 
 def decode_rgba(data):

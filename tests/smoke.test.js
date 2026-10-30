@@ -123,6 +123,7 @@ for (let s = 1; s <= 6; s++) {
   const party = D.UNIT_ORDER.filter(k => r.run.party[k]).map(k => k + r.run.party[k]).join(' ');
   console.log((r.mode === 'win' ? 'ok  ' : 'NG  ') + 'ぼうけん' + s + '：' + r.log.join(' → ') + '｜' + party + '｜レリック ' + r.run.relics.length + '｜❤️' + r.run.hearts);
   if (r.mode === 'win') wins++;
+  assert.ok(Object.keys(r.run.party).length <= 5, 'なかまが 5人より おおい');
 }
 assert.ok(wins >= 5, 'ボタンを おすだけで かてない ぼうけんが おおい: ' + wins + '/6');
 assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
