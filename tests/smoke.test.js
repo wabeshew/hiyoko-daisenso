@@ -8,7 +8,7 @@ const path = require('path');
 const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,' +
+js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
   'FLOORS,COLS,RELICS,UNITS,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -67,6 +67,7 @@ for (let s = 1; s <= 300; s++) {
     if (A.r === C.r && A.c < C.c) assert.ok(!(B.c > E.c), '線が こうさ している seed=' + s);
   }
   assert.ok(nodes.filter(n => n.r === 0).length >= 2, '1だんめの マスが すくない seed=' + s);
+  out.forEach((o, i) => assert.ok(!o.length || o.some(j => nodes[j].t !== 'elite'), '💥しか いけない マスが ある seed=' + s));
 }
 console.log('ok  ちず（300とおり）');
 
@@ -120,6 +121,7 @@ assert.strictEqual(r.mode, 'lose', 'なにもしないのに まけない');
 assert.strictEqual(r.run.hearts, 0);
 assert.strictEqual(r.log.length, 3, 'ハートの 数だけ たたかって いない: ' + r.log.join(' '));
 assert.strictEqual(store[SAVE], undefined, 'まけたのに セーブが のこっている');
+assert.ok(!els.stageName.textContent.includes('❤️'), 'まけたのに 上の ハートが へらない: ' + els.stageName.textContent);
 console.log('ok  なにもしないと まける');
 
 // ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）
@@ -173,4 +175,18 @@ let flew = false;
 for (let n = 0; n < 30 * 1.2; n++) { D.update(1 / 30); flew = flew || foe.st === 'kb' || foe.st === 'gone'; }
 assert.ok(flew, 'コケコッコー！の 波が とどいても ふっとばない: ' + foe.st);
 console.log('ok  コケコッコー！');
+
+// おしろが はんぶんを きると、おしろが じぶんで コケコッコー！（1回だけ。4ぶんの1で もう1回）
+D.newRun(); D.openMap();
+D.goNode(D.nextNodes()[0]);
+const waves = () => D.G.fx.filter(f => f.k === 'wave').length;
+D.hitBase('foe', D.G.home.max * 0.4);
+assert.strictEqual(waves(), 0, 'まだ はんぶん あるのに コケコッコー！した');
+D.hitBase('foe', D.G.home.max * 0.2);
+D.hitBase('foe', 1);
+assert.strictEqual(waves(), 1, 'おしろが はんぶんを きっても コケコッコー！しない');
+D.hitBase('foe', D.G.home.max * 0.3);
+assert.strictEqual(waves(), 2, 'おしろが 4ぶんの1を きっても コケコッコー！しない');
+assert.ok(D.mateCard('king').includes('🌾600') && D.mateCard('king').includes('えさばこを'), 'なかまの カードに つぶが 出ない');
+console.log('ok  おしろの コケコッコー！');
 console.log('ぜんぶ OK');

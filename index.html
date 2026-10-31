@@ -47,7 +47,13 @@ b, strong{ font-weight:900; }
 }
 #hud{ display:flex; align-items:center; gap:8px; padding:8px 12px 6px; }
 .sname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.grain{ position:relative; z-index:3; }
 .grain b{ font-size:19px; color:var(--orange-d); }
+.grain.full{ border-color:#ff6b5b; animation:glow .5s ease-in-out infinite alternate; }
+.grain.full::after{
+  content:'いっぱい！ なかまを だそう'; position:absolute; top:calc(100% + 5px); right:0; font-size:12px; color:#fff; white-space:nowrap;
+  background:#ff6b5b; border:2px solid #fff; border-radius:999px; padding:2px 9px; box-shadow:0 2px 0 var(--shadow);
+}
 .grain small{ font-size:11px; color:var(--muted); }
 .round{
   flex:none; width:38px; height:38px; border-radius:50%; border:3px solid var(--rim); background:#fff; color:var(--ink);
@@ -180,6 +186,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 .pick b{ display:block; font-size:18px; }
 .pick em{ display:block; font-style:normal; font-size:13px; color:var(--orange-d); }
 .pick small{ display:block; font-size:12px; color:var(--muted); }
+.pick .cost{ font-size:13px; color:var(--ink); background:#fff; border:2px solid var(--rim); border-radius:999px; padding:0 7px; vertical-align:2px; }
 .won{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:6px 0; font-size:22px; }
 
 /* タイトル：のはらの けしきに おしろと なかまが ならぶ */
@@ -248,7 +255,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   .unit{ min-height:70px; } .unit .uimg, .unit .uimg img{ height:36px; }
   .howto li{ padding:4px 10px; }
 }
-@media (prefers-reduced-motion: reduce){ .cannon.ready, .node.avail, .sparkle, .unit.hint::after{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ .grain.full, .cannon.ready, .node.avail, .sparkle, .unit.hint::after{ animation:none; } }
 </style>
 </head>
 <body>
@@ -256,7 +263,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   <header id="hud">
     <button id="pauseBtn" class="round" type="button" aria-label="おやすみ">⏸</button>
     <div id="stageName" class="pill sname"></div>
-    <div class="pill grain" aria-label="つぶ">🌾 <b id="grainN">0</b><small> / <span id="grainMax">0</span></small></div>
+    <div id="grainPill" class="pill grain" aria-label="つぶ">🌾 <b id="grainN">0</b><small> / <span id="grainMax">0</span></small></div>
     <button id="mute" class="round" type="button" aria-label="おとを けす">🔊</button>
   </header>
 
@@ -311,6 +318,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
         <li><span class="ic">🧺</span><span>えさばこを おおきくすると、つぶが はやく たまるよ</span></li>
         <li><span class="ic">📣</span><span>コケコッコー！が ひかったら おしてね。てきが ふっとぶよ</span></li>
         <li><span class="ic">🎁</span><span>かつと なかまを ひとり えらべるよ。レリックを あつめると もっと つよく なる</span></li>
+        <li><span class="ic">🏰</span><span>おしろが あぶなく なると、おしろも コケコッコー！ して がんばるよ</span></li>
         <li><span class="ic">❤️</span><span>おしろが こわれると ハートが へるよ。ハートが なくなったら おしまい</span></li>
       </ul>
       <p id="keyHint" class="keys" hidden>キーボード：1〜5 で なかま ／ E で えさばこ ／ スペース で コケコッコー！ ／ ← → で みる ばしょ ／ P で おやすみ</p>
@@ -389,6 +397,7 @@ const HOME_HP = 1200, START_GRAIN = 100;
 const CANNON_CD = 20, CANNON_DMG = 100, WAVE_T = 1.0;  // コケコッコー！の 波は WAVE_T びょうで ステージの はしまで とどく
 const MAX_SIDE = 30;     // かたがわの 数の 上限（おもくならないように）
 const KB_T = 0.45, LUNGE_T = 0.22;
+const ALARM = [0.5, 0.25];   // おしろの HP が この わりあいを きると、おしろが じぶんで コケコッコー！
 const LINE = '#4a2c17';  // ふちどりの 色。キャラの 絵と おなじ こげ茶
 const BG_H = 236;        // せなかの けしきの 絵の 高さ（下の はしを 地面に あわせる）
 
@@ -410,9 +419,9 @@ const UNITS = {
 const UNIT_ORDER = ['piyo', 'kara', 'haya', 'mame', 'kokko', 'cowboy', 'shark', 'drake', 'knight', 'king'];
 const FOES = {
   hebi:      { name: 'ヘビ',     hp: 60,   atk: 6,  range: 26,  speed: 32, rate: 1.2, kb: 2, h: 34, col: '#7fcf6a', grain: 15 },
-  karasu:    { name: 'カラス',   hp: 70,   atk: 9,  range: 26,  speed: 70, rate: 1.0, kb: 2, h: 40, col: '#4a4f6a', grain: 25, fly: true },
-  inoshishi: { name: 'イノシシ', hp: 320,  atk: 20, range: 30,  speed: 44, rate: 1.6, kb: 2, h: 56, col: '#9a6a44', grain: 60 },
-  kitsune:   { name: 'キツネ',   hp: 220,  atk: 20, range: 120, speed: 38, rate: 2.0, kb: 2, h: 54, col: '#ff9a3d', grain: 70, shot: true },
+  karasu:    { name: 'カラス',   hp: 70,   atk: 9,  range: 26,  speed: 70, rate: 1.0, kb: 2, h: 40, col: '#4a4f6a', grain: 25, fly: true, tip: 'はやく とんで くるよ。からぴよで とめよう' },
+  inoshishi: { name: 'イノシシ', hp: 280,  atk: 16, range: 30,  speed: 44, rate: 1.6, kb: 2, h: 56, col: '#9a6a44', grain: 60, tip: 'かたくて つよいよ。なかまを たくさん だそう' },
+  kitsune:   { name: 'キツネ',   hp: 220,  atk: 15, range: 100, speed: 38, rate: 2.0, kb: 2, h: 54, col: '#ff9a3d', grain: 70, shot: true, tip: 'とおくから ひを とばすよ。はやい なかまで ちかづこう' },
   kuma:      { name: 'クマ',     hp: 1200, atk: 22, range: 50,  speed: 22, rate: 2.4, kb: 3, h: 96, col: '#8a5a3a', grain: 300, area: true }
 };
 // 絵の むき（1＝右むき、-1＝左むき）。なかまは 右へ、てきは 左へ すすむ
@@ -436,13 +445,13 @@ const RELICS = {
   bento:  { icon: '🍙', name: 'おべんとう',           desc: 'さいしょの つぶが 150 ふえる',           mod: { startGrain: 150 } },
   shell:  { icon: '🥚', name: 'かたい からの かけら', desc: 'なかまの HPが 3わり ふえる',             mod: { hp: 1.3 } },
   pepper: { icon: '🌶️', name: 'げきから とうがらし', desc: 'なかまの こうげきが 3わり つよく なる',   mod: { atk: 1.3 } },
-  shoes:  { icon: '👟', name: 'はやい くつ',          desc: 'なかまが はやく あるく',                 mod: { speed: 1.3 } },
-  clock:  { icon: '⏰', name: 'めざまし どけい',      desc: 'コケコッコー！が はやく たまる',         mod: { cannonCd: 0.65 } },
+  shoes:  { icon: '👟', name: 'はやい くつ',          desc: 'なかまが 3わり はやく あるく',                 mod: { speed: 1.3 } },
+  clock:  { icon: '⏰', name: 'めざまし どけい',      desc: 'コケコッコー！が 1.5ばい はやく たまる',         mod: { cannonCd: 0.65 } },
   horn:   { icon: '📢', name: 'おおきな メガホン',    desc: 'コケコッコー！が 2ばい つよい',          mod: { cannonDmg: 2 } },
   clover: { icon: '🍀', name: 'よつばの クローバー',  desc: 'てきを おいかえすと もらえる つぶが 2ばい', mod: { reward: 2 } },
-  bell:   { icon: '🔔', name: 'よびだし ベル',        desc: 'なかまを つぎに だせるまでが はやい',     mod: { cd: 0.65 } },
+  bell:   { icon: '🔔', name: 'よびだし ベル',        desc: 'なかまを つぎに だせるまでが 1.5ばい はやい',     mod: { cd: 0.65 } },
   coupon: { icon: '🎫', name: 'わりびき けん',        desc: 'なかまを だす つぶが 2わり やすい',      mod: { cost: 0.8 } },
-  jar:    { icon: '🏺', name: 'おおきな つぼ',        desc: 'つぶを たくさん ためられる',             mod: { grainMax: 1.5 } },
+  jar:    { icon: '🏺', name: 'おおきな つぼ',        desc: 'つぶを 1.5ばい ためられる',             mod: { grainMax: 1.5 } },
   brick:  { icon: '🧱', name: 'れんがの かべ',        desc: 'おしろの HPが 400 ふえる',               mod: { home: 400 } },
   charm:  { icon: '💝', name: 'ハートの おまもり',    desc: 'ハートが 1つ ふえる',                    mod: {}, heart: 1 }
 };
@@ -455,19 +464,19 @@ function battleDef(r, kind) {
   const L = kind === 'boss' ? FLOORS - 2 : r, W = kind === 'boss' ? 4 : r;   // ボスの ときは クマが 主役なので、ざこは 5だんめ なみ（キツネなし）、つよさは 7だんめ なみ
   const waves = [['hebi', 2, Math.max(4, 7 - W * 0.35)]];
   if (W >= 1) waves.push(['karasu', 10, 12 - W * 0.5]);
-  if (W >= 2) waves.push(['inoshishi', 22, 25 - W * 1.0]);
-  if (W >= 5) waves.push(['kitsune', 24, 22 - W * 0.8]);
+  if (W >= 2) waves.push(['inoshishi', 30, 27 - W * 1.0]);
+  if (W >= 5) waves.push(['kitsune', 30, 27 - W * 1.2]);
   const pow = 1 + L * FOE_GROW;
-  if (kind === 'boss') return { len: 1400, base: 1300, theme: 'fort', waves, boss: ['kuma', 1], pow };
+  if (kind === 'boss') return { len: 1400, base: 1300, theme: 'fort', waves, boss: ['kuma', 1.3], pow };
   const elite = kind === 'elite';
   return { len: 1200 + r * 40, base: Math.round((600 + r * 130) * (elite ? 1.3 : 1)), theme: THEME_ROW[r], waves, boss: elite ? [r < 4 ? 'inoshishi' : 'kitsune', 4.5] : null, pow };
 }
 // えさばこ：1びょうに ふえる つぶ、ためられる つぶ、つぎの レベルへの ねだん
 const PURSE = [
-  { rate: 14, max: 300,  up: 80 },
-  { rate: 20, max: 450,  up: 160 },
-  { rate: 27, max: 650,  up: 260 },
-  { rate: 35, max: 900,  up: 400 },
+  { rate: 14, max: 400,  up: 80 },
+  { rate: 20, max: 600,  up: 160 },
+  { rate: 27, max: 800,  up: 260 },
+  { rate: 35, max: 1000, up: 400 },
   { rate: 44, max: 1200, up: 0 }
 ];
 const THEMES = {
@@ -478,19 +487,20 @@ const THEMES = {
   mountain: { sky: ['#a5c8f0', '#f3eefc'], far: '#aab7cc', near: '#8ea891', ground: '#9fc47c', dirt: '#cdae84', amp: 110, deco: 'rock' },
   fort:     { sky: ['#f6bd8e', '#ffe9c4'], far: '#c99f80', near: '#a98563', ground: '#b9b56d', dirt: '#cfa16c', amp: 60, deco: 'stake' }
 };
+// まけたときの ヒント：[ことば, その なかまが いる ときだけ]。まけかたに あう ヒントは loseTip() が さきに えらぶ
 const TIPS = [
-  'えさばこを おおきくすると、つぶが はやく たまるよ',
-  'からぴよを まえに だすと、ほかの なかまが やられにくいよ',
-  'コケコッコー！で てきを ふっとばして、すきに なかまを だそう',
-  'まめぴよは うしろから まめを なげるよ。まもってあげてね',
-  'てきを やっつけると つぶが もらえるよ'
+  ['からぴよを まえに だすと、ほかの なかまが やられにくいよ', 'kara'],
+  ['まめぴよは うしろから まめを なげるよ。まもってあげてね', 'mame'],
+  ['カウボーイぴよの なげなわで てきを とめよう', 'cowboy'],
+  ['コケコッコー！で てきを ふっとばして、すきに なかまを だそう', null],
+  ['ちょっと たかい なかまは、つよいよ。つぶを ためて だしてみよう', null]
 ];
 
 // ===================== DOM =====================
 const $ = id => document.getElementById(id);
 const canvas = $('game'), ctx = canvas.getContext('2d'), stageBox = $('stage');
 const els = {
-  grain: $('grainN'), grainMax: $('grainMax'), stageName: $('stageName'), mute: $('mute'), pause: $('pauseBtn'),
+  grain: $('grainN'), grainMax: $('grainMax'), grainPill: $('grainPill'), stageName: $('stageName'), mute: $('mute'), pause: $('pauseBtn'),
   purse: $('btnPurse'), purseLv: $('purseLv'), purseCost: $('purseCost'), cannon: $('btnCannon'), cannonTip: $('cannonTip'),
   units: Array.from(document.querySelectorAll('.unit')), heroArt: $('heroArt'), keyHint: $('keyHint'), play: $('playBtn'), cont: $('contBtn'),
   title: $('titleScreen'), winCount: $('winCount'), runInfo1: $('runInfo1'), runInfo2: $('runInfo2'),
@@ -607,7 +617,7 @@ function newBattle(st, info) {
     cool: {}, ents: [], shots: [], fx: [], cam: 0, hold: 0, lastHit: 0,
     home: { hp, max: hp, hit: 0 }, foe: { hp: st.base, max: st.base, hit: 0 },
     waves: st.waves.map(([type, first, every]) => ({ type, next: first, every })),
-    bossOut: false, result: null, endT: 0, banner: null, deployed: 0, deco: makeDeco(st, (info ? info.r : 0) * 977 + 13),
+    bossOut: false, alarm: 0, near: false, warn: 0, capT: 0, idleC: 0, result: null, endT: 0, banner: null, deployed: 0, deco: makeDeco(st, (info ? info.r : 0) * 977 + 13),
     slots: UNIT_ORDER.filter(k => run && run.party[k])   // ボタンに ならべる なかま
   };
 }
@@ -617,10 +627,11 @@ function startBattle(node, kind) {
   newBattle(battleDef(r, kind), { node, kind, r });
   mode = 'playing'; showOverlay(null);
   setupUnitButtons();
-  els.stageName.textContent = NODES[kind] + ' ' + THEME_NAME[G.st.theme] + '　' + '❤️'.repeat(run.hearts);
-  banner(kind === 'boss' ? 'ボスの とりでだ！' : 'スタート！'); sfx.start();
+  stageLabel();
+  banner(kind === 'boss' ? 'ボスの とりでだ！' : kind === 'elite' ? 'つよい てきが いるよ！' : 'スタート！'); sfx.start();
   hudUpdate();
 }
+function stageLabel() { setText(els.stageName, NODES[G.info.kind] + ' ' + THEME_NAME[G.st.theme] + '　' + '❤️'.repeat(run.hearts)); }
 function openTitle() {
   mode = 'title'; showOverlay('titleScreen');
   if (SPRITE_SRC.bg_meadow) els.title.style.backgroundImage = 'url(' + SPRITE_SRC.bg_meadow + ')';
@@ -647,12 +658,12 @@ function end(r) {
 function finish() {
   const { node, kind } = G.info;
   if (G.result === 'lose') {
-    run.hearts--; mode = 'lose';
+    run.hearts--; mode = 'lose'; stageLabel();
     const over = run.hearts <= 0;
     if (over) clearRun(); else saveRun();
-    els.loseMsg.innerHTML = over ? 'ハートが なくなっちゃった。<br><b>' + run.path.length + '</b> マス すすんだよ！'
-      : 'おしろが こわれて ハートが へっちゃった。<br>のこりの ハート ' + '❤️'.repeat(run.hearts);
-    els.loseTip.textContent = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)];
+    els.loseMsg.innerHTML = over ? 'ハートが なくなっちゃった。<br><b>' + run.path.length + '</b> マス すすんだよ！<br>つぎは あたらしい ぼうけんに なるよ'
+      : 'おしろが こわれて ハートが へっちゃった。<br>のこりの ハート ' + '❤️'.repeat(run.hearts) + (nextNodes().length > 1 ? '<br>ちずに もどると、ほかの マスも えらべるよ' : '');
+    els.loseTip.textContent = '💡 ' + loseTip();
     for (const b of els.loseAgain) b.hidden = over;
     for (const b of els.loseOver) b.hidden = !over;
     showOverlay('loseScreen');
@@ -670,7 +681,16 @@ function finish() {
   const next = () => offerMates(openMap);
   if (kind === 'elite') giveRelic(next); else next();
 }
-function banner(s) { G.banner = { s, t: 0 }; }
+// まけかたに あう ヒント：つぶを ためすぎた → コケコッコー！を つかわなかった → えさばこを おおきく しなかった → ほかは もっている なかまの ヒント
+function loseTip() {
+  if (G.capT > 20) return 'つぶが いっぱいに なったら、すぐ なかまを だそう';
+  if (G.idleC > 20) return 'コケコッコー！が ひかったら おしてね。てきが ふっとぶよ';
+  if (!G.purse) return 'えさばこを おおきくすると、つぶが はやく たまるよ';
+  const t = TIPS.filter(x => !x[1] || run.party[x[1]]);
+  return t[Math.floor(Math.random() * t.length)][0];
+}
+// sub を わたすと 下に 小さく もう1行（はじめての てきの ひとことなど）。そのときは すこし ながく 出す
+function banner(s, sub) { G.banner = { s, sub, t: 0, life: sub ? 3.4 : 1.8 }; }
 
 // ===================== RUN =====================
 function newRun() {
@@ -704,6 +724,11 @@ function makeMap(rand) {
     n.t = n.r === 0 ? 'fight' : n.r === 3 ? 'chest' : n.r === FLOORS - 1 ? 'rest'
       : n.r >= 2 && x < 0.2 ? 'elite' : n.r >= 4 && x < 0.38 ? 'rest' : 'fight';
   }
+  // 💥に まけても よけて すすめるように、すすむ さきが 💥だけの マスは なくす
+  nodes.forEach((n, i) => {
+    const out = edges.filter(e => e[0] === i).map(e => nodes[e[1]]);
+    if (out.length && out.every(o => o.t === 'elite')) out[0].t = 'fight';
+  });
   return { nodes, edges };
 }
 const here = () => run.path.length ? run.path[run.path.length - 1] : -1;
@@ -736,9 +761,13 @@ function choose(title, msg, items, skip) {
   if (skip) els.pickSkip.textContent = skip[0];
   showOverlay('pickScreen');
 }
+// なかまの カード：だす つぶ、たいりょくと こうげき（レベルアップなら いま → つぎ）。いまの えさばこに はいらない なかまには ひとこと
 function mateCard(k) {
-  const u = UNITS[k], lv = run.party[k] || 0;
-  return unitIcon(k) + '<span><b>' + u.name + '</b><em>' + (lv ? 'Lv' + lv + ' → Lv' + (lv + 1) + ' つよく なる！' : 'あたらしい なかま！') + '</em><small>' + u.desc + '</small></span>';
+  const u = UNITS[k], lv = run.party[k] || 0, m = runMods(), cost = Math.round(u.cost * m.cost / 5) * 5;
+  const hp = l => Math.round(u.hp * LV_MUL[l]), atk = l => Math.round(u.atk * LV_MUL[l]);
+  const stats = lv ? 'たいりょく&nbsp;' + hp(lv) + '→' + hp(lv + 1) + '　こうげき&nbsp;' + atk(lv) + '→' + atk(lv + 1) : 'たいりょく&nbsp;' + hp(1) + '　こうげき&nbsp;' + atk(1);
+  const big = cost > Math.round(PURSE[0].max * m.grainMax) ? '<small>えさばこを おおきくすると だせるよ</small>' : '';
+  return unitIcon(k) + '<span><b>' + u.name + ' <span class="cost">🌾' + cost + '</span></b><em>' + (lv ? 'Lv' + lv + ' → Lv' + (lv + 1) + ' つよく なる！' : 'あたらしい なかま！') + '</em><small>' + u.desc + '</small><small>' + stats + '</small>' + big + '</span>';
 }
 // なかまを 3にんから ひとり：まだ いない なかま（5人に なるまで）か、いる なかまの レベルアップ。w が 大きいほど でやすい
 function offerMates(then) {
@@ -827,6 +856,8 @@ function spawn(side, type, mul) {
   };
   e.hp = e.max;
   G.ents.push(e);
+  const seen = run && (run.seen || (run.seen = {}));
+  if (!ally && seen && d.tip && !seen[type]) { seen[type] = 1; banner(d.name + 'が きたよ！', d.tip); }
   G.fx.push({ k: 'puff', x: e.x, y: GROUND + e.z, t: 0, life: 0.4 });
   return e;
 }
@@ -863,8 +894,9 @@ function fireCannon() {
   if (mode !== 'playing' || G.result) return;
   if (G.cannon < G.cannonCd) { sfx.no(); return; }
   G.cannon = 0; sfx.cannon(); banner('コケコッコー！');
-  G.fx.push({ k: 'wave', x: HOME_X + 20, y: GROUND - 70, t: 0, life: WAVE_T, hit: new Set() });
+  wave();
 }
+function wave() { G.fx.push({ k: 'wave', x: HOME_X + 20, y: GROUND - 70, t: 0, life: WAVE_T, hit: new Set() }); }
 // 波が とどいた てきから じゅんばんに ダメージを あたえて ふっとばす
 function waveHit(f) {
   const front = f.x + (f.t / f.life) * G.len;
@@ -912,6 +944,10 @@ function hitBase(side, n) {
   if (G.result) return;
   const b = side === 'ally' ? G.foe : G.home;
   b.hp = Math.max(0, b.hp - n); b.hit = 0.15; sfx.base();
+  // おしろが はんぶん・4ぶんの1を きったら、おしろが じぶんで コケコッコー！（ボタンの ためは へらない）。まもりが くずれても たてなおせる
+  if (b === G.home) G.warn = 1;
+  if (b === G.foe && !G.near && b.hp > 0 && b.hp <= b.max * 0.3) { G.near = true; banner('もう すこし！'); }
+  if (b === G.home && G.alarm < ALARM.length && b.hp > 0 && b.hp <= b.max * ALARM[G.alarm]) { G.alarm++; banner('おしろが あぶない！'); sfx.cannon(); wave(); }
   G.fx.push({ k: 'spark', x: side === 'ally' ? foeFace() : homeFace(), y: GROUND - 60 - Math.random() * 40, t: 0, life: 0.3 });
   if (b.hp <= 0) end(side === 'ally' ? 'win' : 'lose');
 }
@@ -922,6 +958,9 @@ function update(dt) {
   if (mode !== 'playing') return;
   G.t += dt;
   G.grain = Math.min(purseMax(), G.grain + purseRate() * dt);
+  if (G.grain >= purseMax()) G.capT += dt;
+  if (G.cannon >= G.cannonCd) G.idleC += dt;
+  G.warn = Math.max(0, G.warn - dt);
   for (const k in G.cool) G.cool[k] = Math.max(0, G.cool[k] - dt);
   if (G.cannon < G.cannonCd) { G.cannon = Math.min(G.cannonCd, G.cannon + dt); if (G.cannon === G.cannonCd) sfx.ready(); }
   if (!G.result) {
@@ -1263,6 +1302,24 @@ function drawMinimap() {
   ctx.fillStyle = '#e2574c'; circ(sx(L - HOME_X), cy, 5);
   for (const e of G.ents) if (e.st !== 'gone') { ctx.fillStyle = e.side === 'ally' ? '#ffc61a' : '#8a3a30'; circ(sx(e.x), cy, e.boss ? 4.5 : 2.6); }
 }
+// おしろと とりでの HP：ミニマップの 下に いつも 出す（カメラが どこを 見ていても わかる）
+function drawBars() {
+  const m = mmRect(), y = m.y + m.h + 6, w = (m.w - 8) / 2, h = 17;
+  [[G.home, m.x, '#6cd24a', 'おしろ'], [G.foe, m.x + w + 8, '#ff6b5b', 'とりで']].forEach(([b, x, col, name]) => {
+    const danger = b === G.home && G.warn > 0;
+    ctx.fillStyle = '#fff'; rrect(x, y, w, h, h / 2); ctx.fill();
+    ctx.strokeStyle = danger ? '#ff3b2f' : '#ffb53d'; ctx.lineWidth = danger ? 3 : 2.5; ctx.stroke();
+    ctx.fillStyle = col; rrect(x + 2, y + 2, (w - 4) * b.hp / b.max, h - 4, (h - 4) / 2); ctx.fill();
+    txt(name + ' ' + Math.ceil(b.hp), x + w / 2, y + h / 2 + 1, 12, '#fff', LINE);
+  });
+}
+// おしろが たたかれて いる あいだ、がめんの 左はしを 赤く ひからせる
+function drawWarn() {
+  if (!(G.warn > 0) || G.result) return;
+  const g = ctx.createLinearGradient(0, 0, W * 0.18, 0);
+  g.addColorStop(0, 'rgba(255,40,30,' + (0.45 * G.warn * (0.75 + 0.25 * Math.sin(G.t * 14))).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,40,30,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W * 0.18, H);
+}
 function draw() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const th = THEMES[G.st.theme], bg = sprite('bg_' + G.st.theme), g = ctx.createLinearGradient(0, 0, 0, H);
@@ -1277,12 +1334,15 @@ function draw() {
   for (const s of G.shots) drawShot(s);
   for (const f of G.fx) drawFx(f);
   ctx.restore();
+  drawWarn();
   drawMinimap();
+  if (G.info) drawBars();
   const b = G.banner;
-  if (b && b.t < 1.8) {
-    const k = Math.min(1, b.t / 0.18);
-    ctx.globalAlpha = b.t > 1.4 ? (1.8 - b.t) / 0.4 : 1;
-    txt(b.s, W / 2, H * 0.36, (32 + 12 * (1 - k)) * clamp(W / 420, 0.85, 1.6), '#ffd42a', '#f08a00', '#fff');
+  if (b && b.t < b.life) {
+    const k = Math.min(1, b.t / 0.18), z = clamp(W / 420, 0.85, 1.6);
+    ctx.globalAlpha = b.t > b.life - 0.4 ? (b.life - b.t) / 0.4 : 1;
+    txt(b.s, W / 2, H * 0.36, (32 + 12 * (1 - k)) * z, '#ffd42a', '#f08a00', '#fff');
+    if (b.sub) txt(b.sub, W / 2, H * 0.36 + 40 * z, 15 * z, '#fff', LINE);
     ctx.globalAlpha = 1;
   }
 }
@@ -1319,6 +1379,7 @@ function setupUnitButtons() {
 function hudUpdate() {
   const g = Math.floor(G.grain), P = PURSE[G.purse];
   setText(els.grain, g); setText(els.grainMax, purseMax());
+  els.grainPill.classList.toggle('full', g >= purseMax() && !G.result);
   els.units.forEach((el, i) => {
     const k = G.slots[i];
     el.classList.toggle('poor', !!k && g < unitCost(k));
@@ -1402,8 +1463,10 @@ els.cont.addEventListener('click', () => { ensureAudio(); run = loadRun(); if (r
 $('howBtn').addEventListener('click', () => { ensureAudio(); showOverlay('howScreen'); });
 $('howClose').addEventListener('click', openTitle);
 els.mapBox.addEventListener('click', e => {
-  const b = e.target.closest('.node.avail');
-  if (b) { ensureAudio(); goNode(b.dataset.i === 'boss' ? 'boss' : +b.dataset.i); }
+  const b = e.target.closest('.node');
+  if (!b) return;
+  if (b.classList.contains('avail')) { ensureAudio(); goNode(b.dataset.i === 'boss' ? 'boss' : +b.dataset.i); }
+  else if (!b.classList.contains('done')) els.relicTip.textContent = '✨ ひかっている マスに すすめるよ';
 });
 els.mapRelics.addEventListener('click', e => {
   const b = e.target.closest('.relic');
