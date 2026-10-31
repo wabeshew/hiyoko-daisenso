@@ -101,7 +101,7 @@ function playRun(strat) {
   D.newRun();
   D.openMap();
   const log = [];
-  for (let guard = 0; guard < 200; guard++) {
+  for (let guard = 0; guard < 600; guard++) {
     if (D.mode === 'map') {
       const nx = D.nextNodes();
       const i = nx.slice().sort((a, b) => a === 'boss' ? 0 : D.run.map.nodes[a].c - D.run.map.nodes[b].c)[0];
@@ -129,17 +129,20 @@ assert.ok(!els.stageName.textContent.includes('❤️'), 'まけたのに 上の
 console.log('ok  なにもしないと まける');
 
 // ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）。
-// いれかえで からぴよを おうちに かえして まける ことも あるので 6ぼうけん中 4いじょう（40ぼうけんで 31 クリア）
-let wins = 0;
+// いれかえで からぴよを おうちに かえして まける ことも あるので、ステージ1 の クマは 6ぼうけん中 4いじょう（40ぼうけんで 31）、
+// 3つの ステージ ぜんぶは 3いじょう（40ぼうけんで 24）
+let wins = 0, stage1 = 0;
 for (let s = 1; s <= 6; s++) {
   Math.random = seeded(s * 101);
   r = playRun(kid);
   const party = D.UNIT_ORDER.filter(k => r.run.party[k]).map(k => k + r.run.party[k]).join(' ');
   console.log((r.mode === 'win' ? 'ok  ' : 'NG  ') + 'ぼうけん' + s + '：' + r.log.join(' → ') + '｜' + party + '｜レリック ' + r.run.relics.length + '｜❤️' + r.run.hearts);
   if (r.mode === 'win') wins++;
+  if (r.mode === 'win' || r.run.act >= 1) stage1++;
   assert.ok(Object.keys(r.run.party).length <= r.run.slots, 'なかまが わくより おおい');
 }
-assert.ok(wins >= 4, 'ふつうの あそびかたで かてない ぼうけんが おおい: ' + wins + '/6');
+assert.ok(stage1 >= 4, 'ふつうの あそびかたで クマに かてない ぼうけんが おおい: ' + stage1 + '/6');
+assert.ok(wins >= 3, 'ふつうの あそびかたで さいごまで いけない ぼうけんが おおい: ' + wins + '/6');
 assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
 
 // かったら マスが すすんで、なかまを えらべて、セーブされる
@@ -210,6 +213,35 @@ assert.strictEqual(JSON.parse(store[SAVE]).slots, 6, 'わくが セーブされ�
 D.newBattle(D.battleDef(0, 'fight'), { node: 0, kind: 'fight', r: 0 });
 assert.strictEqual(D.G.slots.length, 6, 'たたかいで 6人 だせない');
 console.log('ok  いれかえと なかまの わく');
+
+// ボスを おいかえすと つぎの ステージ（あたらしい ちずの 1だんめから、ハートは 3つに もどる、コイン・レリック・なかまの ごほうび）。
+// 3つめの ゴリラで ぜんぶ クリア
+Math.random = seeded(11);
+D.newRun(); D.openMap();
+['クマ', 'ライオン', 'ゴリラ'].forEach((name, act) => {
+  assert.strictEqual(D.run.act, act);
+  D.run.hearts = 1;
+  D.run.path = [D.run.map.nodes.findIndex(n => n.r === D.FLOORS - 1)];
+  assert.deepStrictEqual(D.nextNodes(), ['boss']);
+  D.goNode('boss');
+  assert.strictEqual(D.G.st.name, name + 'の とりで');
+  const coins = D.run.coins;
+  D.hitBase('ally', 1e9);
+  fight(null);
+  if (act === 2) return;
+  assert.strictEqual(D.mode, 'pick', name + 'に かっても つぎに すすまない');
+  assert.strictEqual(D.run.act, act + 1);
+  assert.strictEqual(D.run.path.length, 0);
+  assert.strictEqual(D.run.hearts, 3, 'ハートが もどらない');
+  assert.strictEqual(D.run.coins, coins + 100, 'ボスの コインが もらえない');
+  assert.strictEqual(JSON.parse(store[SAVE]).act, act + 1, 'つぎの ステージが セーブされない');
+  for (let n = 0; n < 5 && D.mode === 'pick'; n++) D.picks[0].go();
+  assert.strictEqual(D.mode, 'map');
+  assert.ok(D.nextNodes().every(i => D.run.map.nodes[i].r === 0), 'つぎの ステージが 1だんめから はじまらない');
+});
+assert.strictEqual(D.mode, 'win', 'ゴリラに かっても クリアに ならない');
+assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
+console.log('ok  3つの ステージと ボス');
 
 // レリックと レベルが なかまに きく
 D.run.relics = ['pepper', 'shell', 'coupon'];
