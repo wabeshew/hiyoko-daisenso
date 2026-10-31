@@ -66,14 +66,14 @@ b, strong{ font-weight:900; }
 }
 #game{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
 
-#controls{ display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; padding:10px 12px 12px; }
+#controls{ display:grid; grid-template-columns:repeat(var(--c1,10), 1fr); gap:8px; padding:10px 12px 12px; }
 .ctl, .unit{
   position:relative; overflow:hidden; font-family:inherit; font-weight:800; color:var(--ink); cursor:pointer; touch-action:none;
   border:3px solid #fff; box-shadow:0 0 0 3px var(--edge), 0 6px 0 var(--edge), 0 10px 16px rgba(0,0,0,.14);
   transition:transform .06s, box-shadow .06s, background .15s, filter .15s;
 }
 .ctl{
-  grid-column:span 5; border-radius:22px; min-height:58px; padding:6px 8px;
+  grid-column:span var(--n,5); border-radius:22px; min-height:58px; padding:6px 8px;
   display:flex; align-items:center; justify-content:center; gap:8px;
 }
 .ctl .ico{ font-size:26px; line-height:1; position:relative; }
@@ -112,7 +112,7 @@ b, strong{ font-weight:900; }
 .ctl:focus-visible, .unit:focus-visible, .big:focus-visible, .sub:focus-visible, .round:focus-visible, .pick:focus-visible, .chip:focus-visible{ outline:3px solid #2f8fff; outline-offset:4px; }
 @media (orientation:landscape) and (max-height:540px){
   #hud{ padding:4px 12px 2px; }
-  #controls{ grid-template-columns:repeat(14, 1fr); gap:7px; padding:6px 10px 8px; }
+  #controls{ grid-template-columns:repeat(var(--c2,14), 1fr); gap:7px; padding:6px 10px 8px; }
   .ctl, .unit{ grid-column:span 2; min-height:64px; }
   .ctl{ flex-direction:column; gap:2px; padding:4px; }
   .ctl .tx{ align-items:center; }
@@ -162,7 +162,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   background:linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,0));
 }
 .big:active{ transform:translateY(4px); box-shadow:0 0 0 3px var(--orange-d), 0 3px 0 var(--orange-dd); }
-.big[hidden], .sub[hidden], .keys[hidden]{ display:none; }
+.big[hidden], .sub[hidden], .keys[hidden], .unit[hidden]{ display:none; }
 .sub{
   display:block; margin:14px auto 0; font-family:inherit; font-weight:800; font-size:15px; border:none; background:none;
   color:var(--muted); text-decoration:underline; text-underline-offset:4px; cursor:pointer; padding:6px 10px;
@@ -186,6 +186,8 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 .pick b{ display:block; font-size:18px; }
 .pick em{ display:block; font-style:normal; font-size:13px; color:var(--orange-d); }
 .pick small{ display:block; font-size:12px; color:var(--muted); }
+.pick .price{ flex:none; margin-left:auto; font-size:17px; background:#fff; border:3px solid var(--rim); border-radius:999px; padding:2px 10px; white-space:nowrap; }
+.pick.off{ opacity:.55; filter:grayscale(.7); }
 .pick .cost{ font-size:13px; color:var(--ink); background:#fff; border:2px solid var(--rim); border-radius:999px; padding:0 7px; vertical-align:2px; }
 .won{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:6px 0; font-size:22px; }
 
@@ -218,11 +220,14 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   .grain small{ display:none; }
   .badge-l, .badge-r{ bottom:8px; font-size:12px; }
   .badge-r{ padding:4px 12px; }
+  #controls.many{ gap:5px; }   /* なかまが 6人 いじょうの ときは ボタンが ほそいので つめる */
+  #controls.many .ucost{ font-size:12px; padding:1px 4px; }
 }
 
 /* ちず：ぼうけんの ちず（かみ） */
 .mapcard{ max-width:500px; padding:14px 14px 10px; }
 .maphead{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.coins{ margin-right:auto; }
 .relics{ display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; }
 .relics small{ font-size:11px; color:var(--muted); }
 .relic{ width:36px; height:36px; padding:0; border:3px solid var(--rim); border-radius:50%; background:#fff; font-size:18px; cursor:pointer; box-shadow:0 2px 0 var(--shadow); }
@@ -231,6 +236,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 .mate{ display:flex; flex-direction:column; align-items:center; font-size:11px; line-height:1.2; }
 .mate img{ height:38px; filter:drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff); }
 .mate .e{ font-size:26px; }
+.mate.empty{ width:34px; height:34px; margin-top:2px; border:3px dashed var(--rim); border-radius:50%; }
 .mapbox{
   position:relative; height:min(50vh, 460px); overflow-y:auto; border-radius:20px; touch-action:pan-y;
   background:radial-gradient(circle at 30% 20%, #fffdf3, #fbefcf); box-shadow:inset 0 0 0 3px #f0d79b;
@@ -279,6 +285,8 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
     <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
     <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
     <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
+    <button class="unit" type="button"><span class="cd"></span><span class="ulv"></span><span class="uimg"></span><span class="ucost"></span></button>
   </nav>
 
   <section id="titleScreen" class="overlay scene">
@@ -318,10 +326,11 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
         <li><span class="ic">🧺</span><span>えさばこを おおきくすると、つぶが はやく たまるよ</span></li>
         <li><span class="ic">📣</span><span>コケコッコー！が ひかったら おしてね。てきが ふっとぶよ</span></li>
         <li><span class="ic">🎁</span><span>かつと なかまを ひとり えらべるよ。レリックを あつめると もっと つよく なる</span></li>
+        <li><span class="ic">🪙</span><span>かつと コインが もらえるよ。🏪 おみせで なかまや レリックを かおう</span></li>
         <li><span class="ic">🏰</span><span>おしろが あぶなく なると、おしろも コケコッコー！ して がんばるよ</span></li>
         <li><span class="ic">❤️</span><span>おしろが こわれると ハートが へるよ。ハートが なくなったら おしまい</span></li>
       </ul>
-      <p id="keyHint" class="keys" hidden>キーボード：1〜5 で なかま ／ E で えさばこ ／ スペース で コケコッコー！ ／ ← → で みる ばしょ ／ P で おやすみ</p>
+      <p id="keyHint" class="keys" hidden>キーボード：すうじ で なかま ／ E で えさばこ ／ スペース で コケコッコー！ ／ ← → で みる ばしょ ／ P で おやすみ</p>
       <button id="howClose" class="big" type="button">わかった！</button>
     </div>
   </section>
@@ -330,12 +339,13 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
     <div class="card mapcard">
       <div class="maphead">
         <span id="mapHearts" class="pill hearts" aria-label="ハート"></span>
+        <span id="mapCoins" class="pill coins" aria-label="コイン"></span>
         <span id="mapRelics" class="relics"></span>
       </div>
       <p id="relicTip" class="relic-tip"></p>
       <div id="mapParty" class="party"></div>
       <div id="mapBox" class="mapbox"></div>
-      <p class="legend">⚔️ たたかい　💥 つよい てき（レリックが もらえる）<br>☀️ ひとやすみ　🎁 たからばこ　🐻 ボス</p>
+      <p class="legend">⚔️ たたかい　💥 つよい てき（レリックが もらえる）<br>☀️ ひとやすみ　🎁 たからばこ　🏪 おみせ　🐻 ボス</p>
       <button class="sub toTitle" type="button">タイトルに もどる</button>
     </div>
   </section>
@@ -429,13 +439,16 @@ const ART = { piyo: 1, kara: 1, haya: 1, mame: 1, kokko: 1, cowboy: 1, shark: 1,
 
 const LV_MUL = [0, 1, 1.4, 1.9];  // なかまの レベル（1〜3）ごとの HP と こうげきの ばいりつ
 const START_PARTY = { piyo: 1, kara: 1 };
-const PARTY_MAX = 5;   // なかまは 5人まで（ボタンの 数）。いっぱいの ときは レベルアップだけ えらべる
+const START_SLOTS = 5, MAX_SLOTS = 7;   // つれて いける なかまの わく（ボタンの 数）。おみせで かうと ふえる。いっぱいの ときは いれかえ
 const START_HEARTS = 3, MAX_HEARTS = 5;   // まけると ハートが へる。なくなったら ぼうけんは おしまい
 
 // ちず：FLOORS だん（下から上へ すすむ）の あと、さいごに ボス。よこは COLS れつ
 const FLOORS = 8, COLS = 4, ROW_H = 64;
 const FOE_GROW = 0.1;   // 1だん すすむごとに てきが つよく なる わりあい
-const NODES = { fight: '⚔️', elite: '💥', rest: '☀️', chest: '🎁', boss: '🐻' };
+const NODES = { fight: '⚔️', elite: '💥', rest: '☀️', chest: '🎁', shop: '🏪', boss: '🐻' };
+// コイン：かつと もらえる（ボスは なし）。おみせで なかま・レリック・ハート・なかまの わくを かう。なかまの ねだんは つよい ほど たかい（35〜105）
+const COINS = { fight: 30, elite: 60 }, SHOP = { relic: 100, heart: 50, slot: 80 };
+const matePrice = k => Math.round((30 + UNITS[k].cost / 8) / 5) * 5;
 const THEME_ROW = ['meadow', 'meadow', 'farm', 'farm', 'forest', 'river', 'river', 'mountain'];  // だんごとの けしき
 const THEME_NAME = { meadow: 'のはら', farm: 'はたけ', forest: 'もり', river: 'かわら', mountain: 'やま', fort: 'クマの とりで' };
 
@@ -498,13 +511,13 @@ const TIPS = [
 
 // ===================== DOM =====================
 const $ = id => document.getElementById(id);
-const canvas = $('game'), ctx = canvas.getContext('2d'), stageBox = $('stage');
+const canvas = $('game'), ctx = canvas.getContext('2d'), stageBox = $('stage'), controls = $('controls');
 const els = {
   grain: $('grainN'), grainMax: $('grainMax'), grainPill: $('grainPill'), stageName: $('stageName'), mute: $('mute'), pause: $('pauseBtn'),
   purse: $('btnPurse'), purseLv: $('purseLv'), purseCost: $('purseCost'), cannon: $('btnCannon'), cannonTip: $('cannonTip'),
   units: Array.from(document.querySelectorAll('.unit')), heroArt: $('heroArt'), keyHint: $('keyHint'), play: $('playBtn'), cont: $('contBtn'),
   title: $('titleScreen'), winCount: $('winCount'), runInfo1: $('runInfo1'), runInfo2: $('runInfo2'),
-  mapHearts: $('mapHearts'), mapRelics: $('mapRelics'), relicTip: $('relicTip'), mapParty: $('mapParty'), mapBox: $('mapBox'),
+  mapHearts: $('mapHearts'), mapCoins: $('mapCoins'), mapRelics: $('mapRelics'), relicTip: $('relicTip'), mapParty: $('mapParty'), mapBox: $('mapBox'),
   pickTitle: $('pickTitle'), pickMsg: $('pickMsg'), pickList: $('pickList'), pickSkip: $('pickSkip'),
   winParty: $('winParty'), winRelics: $('winRelics'), loseMsg: $('loseMsg'), loseTip: $('loseTip'),
   loseAgain: Array.from(document.querySelectorAll('.loseAgain')), loseOver: Array.from(document.querySelectorAll('.loseOver'))
@@ -523,12 +536,12 @@ function shuffle(a, rand) { for (let i = a.length - 1; i > 0; i--) { const j = M
 // いまの ぼうけん（run）を まるごと しまう。マスを おえるたびに しまうので、たたかいの とちゅうで やめると その まえから やりなおし
 const SAVE_KEY = 'hiyoko-daisenso-v2';
 function saveRun() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(run)); } catch (_) {} }
-function loadRun() { try { const r = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return r && r.v === 2 ? r : null; } catch (_) { return null; } }
+function loadRun() { try { const r = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return r && r.v === 2 ? Object.assign({ coins: 0, slots: START_SLOTS }, r) : null; } catch (_) { return null; } }
 function clearRun() { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} }
 
 // ===================== STATE =====================
 let mode = 'title';   // title / map / pick / playing / paused / win / lose
-let run = null;       // いまの ぼうけん：ちず、とおった マス（path）、ハート、なかまの レベル（party）、レリック
+let run = null;       // いまの ぼうけん：ちず、とおった マス（path）、ハート、コイン、なかまの レベル（party）、レリック
 let G = null;         // いまの たたかい（newBattle が作る）
 let picks = [];       // えらぶ がめんに 出ている こうほ（{ go }）。picks.skip は「えらばない」
 const keys = {}, drag = { id: null, x: 0 };
@@ -687,6 +700,7 @@ function finish() {
     showOverlay('loseScreen');
     return;
   }
+  if (kind !== 'boss') run.coins += COINS[kind];
   arrive(node);
   if (kind === 'boss') {
     clearRun(); mode = 'win';
@@ -696,7 +710,7 @@ function finish() {
     showOverlay('winScreen');
     return;
   }
-  const next = () => offerMates(openMap);
+  const next = () => offerMates(openMap, '🪙 ' + COINS[kind] + ' もらったよ！');
   if (kind === 'elite') giveRelic(next); else next();
 }
 // まけかたに あう ヒント：つぶを ためすぎた → コケコッコー！を つかわなかった → えさばこを おおきく しなかった → ほかは もっている なかまの ヒント
@@ -713,7 +727,7 @@ function banner(s, sub) { G.banner = { s, sub, t: 0, life: sub ? 3.4 : 1.8 }; }
 // ===================== RUN =====================
 function newRun() {
   const seed = 1 + Math.floor(Math.random() * 2147483640);
-  run = { v: 2, seed, map: makeMap(seeded(seed)), path: [], hearts: START_HEARTS, party: Object.assign({}, START_PARTY), relics: [] };
+  run = { v: 2, seed, map: makeMap(seeded(seed)), path: [], hearts: START_HEARTS, coins: 0, slots: START_SLOTS, party: Object.assign({}, START_PARTY), relics: [] };
   saveRun();
 }
 function runMods() {
@@ -740,8 +754,10 @@ function makeMap(rand) {
   for (const n of nodes) {
     const x = rand();
     n.t = n.r === 0 ? 'fight' : n.r === 3 ? 'chest' : n.r === FLOORS - 1 ? 'rest'
-      : n.r >= 2 && x < 0.2 ? 'elite' : n.r >= 4 && x < 0.38 ? 'rest' : 'fight';
+      : n.r >= 2 && x < 0.2 ? 'elite' : n.r >= 4 && x < 0.38 ? 'rest' : n.r >= 2 && x > 0.85 ? 'shop' : 'fight';
   }
+  // おみせは かならず 1つは ある
+  if (!nodes.some(n => n.t === 'shop')) { const f = nodes.filter(n => n.r >= 4 && n.t === 'fight'); if (f.length) f[Math.floor(rand() * f.length)].t = 'shop'; }
   // 💥に まけても よけて すすめるように、すすむ さきが 💥だけの マスは なくす
   nodes.forEach((n, i) => {
     const out = edges.filter(e => e[0] === i).map(e => nodes[e[1]]);
@@ -761,6 +777,7 @@ function arrive(node) { run.path.push(node); saveRun(); }
 function goNode(node) {
   const kind = node === 'boss' ? 'boss' : run.map.nodes[node].t;
   if (kind === 'chest') { arrive(node); giveRelic(openMap); }
+  else if (kind === 'shop') openShop(node);
   else if (kind === 'rest') openRest(node);
   else startBattle(node, kind);
 }
@@ -771,7 +788,7 @@ function choose(title, msg, items, skip) {
   els.pickList.innerHTML = '';
   for (const it of items) {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'pick'; b.innerHTML = it.html;
+    b.type = 'button'; b.className = 'pick' + (it.off ? ' off' : ''); b.innerHTML = it.html;
     b.addEventListener('click', () => { ensureAudio(); if (picks.includes(it)) it.go(); });
     els.pickList.appendChild(b);
   }
@@ -785,32 +802,71 @@ function mateCard(k) {
   const hp = l => Math.round(u.hp * LV_MUL[l]), atk = l => Math.round(u.atk * LV_MUL[l]);
   const stats = lv ? 'たいりょく&nbsp;' + hp(lv) + '→' + hp(lv + 1) + '　こうげき&nbsp;' + atk(lv) + '→' + atk(lv + 1) : 'たいりょく&nbsp;' + hp(1) + '　こうげき&nbsp;' + atk(1);
   const big = cost > Math.round(PURSE[0].max * m.grainMax) ? '<small>えさばこを おおきくすると だせるよ</small>' : '';
-  return unitIcon(k) + '<span><b>' + u.name + ' <span class="cost">🌾' + cost + '</span></b><em>' + (lv ? 'Lv' + lv + ' → Lv' + (lv + 1) + ' つよく なる！' : 'あたらしい なかま！') + '</em><small>' + u.desc + '</small><small>' + stats + '</small>' + big + '</span>';
+  return unitIcon(k) + '<span><b>' + u.name + ' <span class="cost">🌾' + cost + '</span></b><em>' + (lv ? 'Lv' + lv + ' → Lv' + (lv + 1) + ' つよく なる！' : 'あたらしい なかま！' + (Object.keys(run.party).length >= run.slots ? '（だれかと いれかえ）' : '')) + '</em><small>' + u.desc + '</small><small>' + stats + '</small>' + big + '</span>';
 }
-// なかまを 3にんから ひとり：まだ いない なかま（5人に なるまで）か、いる なかまの レベルアップ。w が 大きいほど でやすい
-function offerMates(then) {
-  const full = Object.keys(run.party).length >= PARTY_MAX;
-  const pool = UNIT_ORDER.filter(k => run.party[k] ? run.party[k] < 3 : !full), ks = [];
-  while (ks.length < 3 && pool.length) {
+// なかまに できるのは、まだ いない なかま（わくが いっぱいなら いれかえ）か、Lv3 より したの なかま
+const canGet = k => (run.party[k] || 0) < 3;
+// k を なかまに する（いる なかまなら レベルアップ）。わくが いっぱいの ときは おうちに かえる なかまを えらぶ。back で えらびなおし
+function takeMate(k, done, back) {
+  if (run.party[k] || Object.keys(run.party).length < run.slots) { run.party[k] = (run.party[k] || 0) + 1; done(); return; }
+  choose('だれと いれかえる？', UNITS[k].name + 'の かわりに<br>おうちに かえる なかまを えらんでね', UNIT_ORDER.filter(j => run.party[j]).map(j => ({
+    html: unitIcon(j) + '<span><b>' + UNITS[j].name + ' Lv' + run.party[j] + '</b><small>' + UNITS[j].desc + '</small></span>',
+    go: () => { delete run.party[j]; run.party[k] = 1; done(); }
+  })), ['やめる', back]);
+}
+// なかまに できる なかまを n人 えらぶ。w が 大きいほど でやすい。
+// わくが いっぱいの ときは あたらしい なかまは 1人まで（いれかえで レベルが きえて よわく なりすぎないように、のこりは レベルアップ）
+function mateKeys(n) {
+  const pool = UNIT_ORDER.filter(canGet), ks = [], full = Object.keys(run.party).length >= run.slots;
+  while (ks.length < n && pool.length) {
     let x = Math.random() * pool.reduce((t, k) => t + UNITS[k].w, 0), i = 0;
     while ((x -= UNITS[pool[i]].w) > 0 && i < pool.length - 1) i++;
-    ks.push(pool.splice(i, 1)[0]);
+    const k = pool.splice(i, 1)[0];
+    ks.push(k);
+    if (full && !run.party[k]) for (let j = pool.length; j--;) if (!run.party[pool[j]]) pool.splice(j, 1);
   }
-  if (!ks.length) { then(); return; }
-  choose('なかまを えらぼう', 'ひとり えらんでね', ks.map(k => ({
-    html: mateCard(k), go: () => { run.party[k] = (run.party[k] || 0) + 1; sfx.up(); saveRun(); then(); }
-  })), ['えらばない', then]);
+  return ks;
 }
+// なかまを 3にんから ひとり：あたらしい なかまか、いる なかまの レベルアップ。lead は うえに 出す ひとこと（もらった コイン）
+function offerMates(then, lead) {
+  const ks = mateKeys(3);
+  if (!ks.length) { then(); return; }
+  (function show() {
+    choose('なかまを えらぼう', (lead ? lead + '<br>' : '') + 'ひとり えらんでね', ks.map(k => ({
+      html: mateCard(k), go: () => takeMate(k, () => { sfx.up(); saveRun(); then(); }, show)
+    })), ['えらばない', then]);
+  })();
+}
+const newRelics = () => Object.keys(RELICS).filter(k => !run.relics.includes(k));
+const relicCard = (k, more) => '<span class="ri">' + RELICS[k].icon + '</span><span><b>' + RELICS[k].name + '</b><small>' + RELICS[k].desc + '</small>' + (more || '') + '</span>';
+function addRelic(k) { run.relics.push(k); if (RELICS[k].heart) run.hearts = Math.min(MAX_HEARTS, run.hearts + RELICS[k].heart); }
 function giveRelic(then) {
-  const pool = Object.keys(RELICS).filter(k => !run.relics.includes(k));
+  const pool = newRelics();
   if (!pool.length) { then(); return; }
-  const k = pool[Math.floor(Math.random() * pool.length)], R = RELICS[k];
-  run.relics.push(k);
-  if (R.heart) run.hearts = Math.min(MAX_HEARTS, run.hearts + R.heart);
-  saveRun(); sfx.up();
-  choose('レリックを みつけた！', 'もっていると ずっと きく ふしぎな どうぐだよ', [{
-    html: '<span class="ri">' + R.icon + '</span><span><b>' + R.name + '</b><small>' + R.desc + '</small><em>おして すすむ</em></span>', go: then
-  }], null);
+  const k = pool[Math.floor(Math.random() * pool.length)];
+  addRelic(k); saveRun(); sfx.up();
+  choose('レリックを みつけた！', 'もっていると ずっと きく ふしぎな どうぐだよ', [{ html: relicCard(k, '<em>おして すすむ</em>'), go: then }], null);
+}
+// おみせ：コインで なかま 2人・レリック・ハート・なかまの わくを かう。かった ものは うりきれ。でるまで なんども かえる。
+// ponytail: はいった ときに マスを おえる（しなものは しまわない）ので、とちゅうで やめると のこりは かえない。こまったら run に しなものを しまう
+function openShop(node) {
+  arrive(node);
+  const pool = newRelics(), rel = pool[Math.floor(Math.random() * pool.length)];
+  let show;
+  const stock = mateKeys(2).map(k => ({ price: matePrice(k), ok: () => canGet(k), html: () => mateCard(k), buy: done => takeMate(k, done, show) }));
+  if (rel) stock.push({ price: SHOP.relic, ok: () => true, html: () => relicCard(rel), buy: done => { addRelic(rel); done(); } });
+  stock.push({ price: SHOP.heart, ok: () => run.hearts < MAX_HEARTS, html: () => '<span class="ri">❤️</span><span><b>ハート</b><small>ハートが 1つ ふえる（' + MAX_HEARTS + 'つ まで）</small></span>', buy: done => { run.hearts++; done(); } });
+  stock.push({ price: SHOP.slot, ok: () => run.slots < MAX_SLOTS, html: () => '<span class="ri">➕</span><span><b>なかまの わく</b><small>つれて いける なかまが 1人 ふえる（' + MAX_SLOTS + '人 まで）</small></span>', buy: done => { run.slots++; done(); } });
+  (show = function () {
+    const items = stock.filter(s => s.ok()).map(s => ({
+      html: s.html() + '<span class="price">🪙' + s.price + '</span>', off: run.coins < s.price,
+      go: () => {
+        if (run.coins < s.price) { sfx.no(); return; }
+        s.buy(() => { run.coins -= s.price; stock.splice(stock.indexOf(s), 1); sfx.up(); saveRun(); show(); });
+      }
+    }));
+    choose('おみせ', '🪙 <b>' + run.coins + '</b> もっているよ。' + (items.length ? 'ほしい ものを えらんでね' : 'ぜんぶ うりきれ！'), items, ['おみせを でる', openMap]);
+  })();
 }
 function openRest(node) {
   const done = () => { arrive(node); openMap(); };
@@ -834,8 +890,9 @@ function openMap() {
   mode = 'map';
   setText(els.mapHearts, '❤️'.repeat(run.hearts) + '🤍'.repeat(Math.max(0, START_HEARTS - run.hearts)));
   els.mapRelics.innerHTML = run.relics.length ? run.relics.map(k => '<button class="relic" type="button" data-k="' + k + '" aria-label="' + RELICS[k].name + '">' + RELICS[k].icon + '</button>').join('') : '<small>レリック なし</small>';
+  setText(els.mapCoins, '🪙 ' + run.coins);
   els.relicTip.textContent = '';
-  els.mapParty.innerHTML = partyHtml();
+  els.mapParty.innerHTML = partyHtml() + '<span class="mate empty"></span>'.repeat(Math.max(0, run.slots - Object.keys(run.party).length));
   // マスの いち：よこは %、たては 下から（ボスが いちばん 上）。すこし ずらして 手がきの ちずっぽく
   const full = (FLOORS + 1) * ROW_H + 56, nodes = run.map.nodes;
   const pos = i => i === 'boss' ? { x: 50, y: 44 } : { x: 12 + (nodes[i].c + 0.5) / COLS * 76 + ((nodes[i].r * 7 + nodes[i].c * 13) % 5 - 2) * 2, y: full - 44 - nodes[i].r * ROW_H };
@@ -1385,11 +1442,15 @@ function drawHero() {
 
 // ===================== HUD =====================
 function setupUnitButtons() {
+  const n = run ? run.slots : START_SLOTS;
+  controls.classList.toggle('many', n > START_SLOTS);
+  controls.style.setProperty('--n', n); controls.style.setProperty('--c1', n * 2); controls.style.setProperty('--c2', n * 2 + 4);
   els.units.forEach((el, i) => {
+    el.hidden = i >= n;
     const k = G.slots[i], lv = k ? run.party[k] : 0;
     el.classList.toggle('empty', !k);
     el.querySelector('.uimg').innerHTML = k ? unitIcon(k) : '';
-    el.querySelector('.ucost').textContent = k ? '🌾' + unitCost(k) : '';
+    el.querySelector('.ucost').textContent = k ? (n > START_SLOTS ? '' : '🌾') + unitCost(k) : '';   // ほそい ときは かずだけ
     el.querySelector('.ulv').textContent = lv > 1 ? 'Lv' + lv : '';
     el.setAttribute('aria-label', k ? UNITS[k].name + ' Lv' + lv + '（つぶ ' + unitCost(k) + '）' : 'まだ いないよ');
   });
@@ -1457,7 +1518,7 @@ window.addEventListener('keydown', e => {
   if (e.repeat) return;
   if (mode === 'paused' && (k === 'p' || k === 'escape')) { resume(); return; }
   if (mode !== 'playing') return;
-  if (k.length === 1 && k >= '1' && k <= '5') deploy(+k - 1);
+  if (k.length === 1 && k >= '1' && k <= '9') deploy(+k - 1);
   else if (k === 'e') upgradePurse();
   else if (k === ' ' || k === 'c') fireCannon();
   else if (k === 'p' || k === 'escape') pause();
