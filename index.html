@@ -562,6 +562,24 @@ function noise(dur, vol, freq) {
   g.gain.setValueAtTime(vol || 0.1, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   src.connect(fl); fl.connect(g); g.connect(master); src.start(t0); src.stop(t0 + dur + 0.03);
 }
+// たたかいの BGM（audio/battle.m4a を くりかえす）。iPhone・iPad は audio の volume が きかないので、
+// WebAudio の master に つないで おおきさを きめる（file:// で ひらくと つなげないので そのまま ならす）
+const BGM_VOL = 0.35;
+const bgm = typeof Audio !== 'undefined' ? new Audio('audio/battle.m4a') : null;
+if (bgm) { bgm.loop = true; bgm.preload = 'auto'; bgm.muted = muted; bgm.volume = BGM_VOL * 0.6; }
+let bgmLinked = false;
+function bgmPlay(fromStart) {
+  if (!bgm) return;
+  ensureAudio();
+  if (actx && !bgmLinked && location.protocol !== 'file:') {
+    try { const g = actx.createGain(); g.gain.value = BGM_VOL; actx.createMediaElementSource(bgm).connect(g); g.connect(master); bgm.volume = 1; } catch (_) {}
+    bgmLinked = true;
+  }
+  if (fromStart) bgm.currentTime = 0;
+  const p = bgm.play();
+  if (p && p.catch) p.catch(() => {});
+}
+function bgmStop() { if (bgm) bgm.pause(); }
 const sfx = {
   deploy() { tone(1300, .07, 'sine', .14, 2000); tone(1600, .09, 'sine', .12, 2400, .08); },
   no() { tone(220, .12, 'square', .04, 180); },
@@ -628,7 +646,7 @@ function startBattle(node, kind) {
   mode = 'playing'; showOverlay(null);
   setupUnitButtons();
   stageLabel();
-  banner(kind === 'boss' ? 'ボスの とりでだ！' : kind === 'elite' ? 'つよい てきが いるよ！' : 'スタート！'); sfx.start();
+  banner(kind === 'boss' ? 'ボスの とりでだ！' : kind === 'elite' ? 'つよい てきが いるよ！' : 'スタート！'); sfx.start(); bgmPlay(true);
   hudUpdate();
 }
 function stageLabel() { setText(els.stageName, NODES[G.info.kind] + ' ' + THEME_NAME[G.st.theme] + '　' + '❤️'.repeat(run.hearts)); }
@@ -646,10 +664,10 @@ function openTitle() {
   drawHero();
 }
 function wins() { try { return +localStorage.getItem('hiyoko-daisenso-wins') || 0; } catch (_) { return 0; } }
-function pause() { if (mode !== 'playing' || G.result) return; mode = 'paused'; showOverlay('pauseScreen'); }
-function resume() { if (mode !== 'paused') return; mode = 'playing'; showOverlay(null); }
+function pause() { if (mode !== 'playing' || G.result) return; mode = 'paused'; showOverlay('pauseScreen'); bgmStop(); }
+function resume() { if (mode !== 'paused') return; mode = 'playing'; showOverlay(null); bgmPlay(); }
 function end(r) {
-  G.result = r; G.endT = 1.6;
+  G.result = r; G.endT = 1.6; bgmStop();
   for (const e of G.ents) if (e.st !== 'gone' && e.side === (r === 'win' ? 'foe' : 'ally')) defeat(e, true);
   if (r === 'win') { banner('やったー！'); sfx.win(); } else { banner('あぁっ…'); sfx.lose(); }
 }
@@ -1486,6 +1504,7 @@ function setMuteIcon() {
 els.mute.addEventListener('click', () => {
   muted = !muted; ensureAudio();
   if (master) master.gain.value = muted ? 0 : 0.6;
+  if (bgm) bgm.muted = muted;
   try { localStorage.setItem('hiyoko-daisenso-muted', muted ? '1' : '0'); } catch (_) {}
   setMuteIcon();
 });
