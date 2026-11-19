@@ -128,7 +128,7 @@ assert.strictEqual(r.mode, 'lose', 'なにもしないのに まけない');
 assert.strictEqual(r.run.hearts, 0);
 assert.strictEqual(r.log.length, 3, 'ハートの 数だけ たたかって いない: ' + r.log.join(' '));
 assert.strictEqual(store[SAVE], undefined, 'まけたのに セーブが のこっている');
-assert.ok(!els.stageName.textContent.includes('❤️'), 'まけたのに 上の ハートが へらない: ' + els.stageName.textContent);
+assert.ok(!els.stageName.innerHTML.includes('❤️'), 'まけたのに 上の ハートが へらない: ' + els.stageName.innerHTML);
 console.log('ok  なにもしないと まける');
 
 // ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）。
