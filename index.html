@@ -1340,7 +1340,7 @@ function drawStk(g, im, h, rim) {
 // drawStk() を n本の 帯に 切って、帯ごとに ずらして 描く（ぴよドラの drawWarped と おなじ やりかた）。
 // cols＝たての 帯（よこに ならぶ）。off(u)＝帯の いち u（0〜1、上か 左から）での ずれ（描いた 先の px、帯の むきと 直角）
 function drawStrips(g, im, h, rim, cols, off) {
-  const k = h / im.naturalHeight, p = Math.max(2, Math.round(rim / k)), sk = sticker(im, p), w = im.naturalWidth * k, n = 14;
+  const k = h / im.naturalHeight, p = Math.max(2, Math.round(rim / k)), sk = sticker(im, p), w = im.naturalWidth * k, n = cols ? 28 : 14;   // たての 帯は こまかく（ふちが ギザギザに ならない ように）
   const x0 = -w / 2 - p * k, y0 = -h - p * k, W = sk.width, H = sk.height;
   for (let i = 0; i < n; i++) {
     const d = off((i + 0.5) / n);
@@ -1499,7 +1499,7 @@ function drawEnt(e) {
   const d = e.d, h = d.h * e.s, im = sprite(e.type), face = im ? (ART[e.type] || 1) : 1;
   let x = e.x, y = feetY(e), rot = 0, a = 1, flip = e.dir * face, sy = 1, bend = 0;
   const walk = e.st === 'walk' && !(e.stun > 0), live = e.st !== 'kb' && e.st !== 'gone';
-  if (walk) { const p = Math.abs(Math.sin(e.t * 9)); y -= p * 3 * e.s; rot = Math.sin(e.t * 9) * 0.05 * e.dir; sy = 0.94 + 0.1 * p; bend = Math.sin(e.t * 9 - 0.8) * 1.5 * e.s; }
+  if (walk && !d.wave) { const p = Math.abs(Math.sin(e.t * 9)); y -= p * 3 * e.s; rot = Math.sin(e.t * 9) * 0.05 * e.dir; sy = 0.94 + 0.1 * p; bend = Math.sin(e.t * 9 - 0.8) * 1.5 * e.s; }
   else if (live) { sy = 1 + 0.025 * Math.sin(e.t * 3); bend = Math.sin(e.t * 3 - 0.6) * 0.8 * e.s; }
   if (d.fly && e.st !== 'gone') y += Math.sin(e.t * 5) * 4;
   if (e.st === 'atk' && e.cd < WIND_T && !(e.lunge > 0) && !(e.stun > 0)) {
@@ -1517,9 +1517,11 @@ function drawEnt(e) {
   else shadow(e.trem > 0 && e.st === 'kb' ? e.kbX : e.x, GROUND + e.z + 2, h * 0.32, h * 0.08);
   ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(flip / sy, sy);   // 足もとを うごかさずに つぶす・のばす
   if (im) {
-    // ヘビは たての 帯を 上下に ずらして うねる。ほかは よこの 帯を ずらして、あたまの ほうほど まがる（絵の 中の まえは face）
-    const t = e.t, wave = d.wave && live, sp = walk ? 10 : 3;
-    const off = wave ? u => Math.sin(u * 7 - t * sp) * 1.6 * e.s : u => face * bend * (1 - u) * (1 - u);
+    // ヘビは はねずに すべって、たての 帯を 上下に ずらして うねる。あたまは ゆがめず（顔が ねじれると きもちわるい）、
+    // くびから しっぽへ だんだん 大きく うねる。ほかは よこの 帯を ずらして、あたまの ほうほど まがる（絵の 中の まえは face）
+    const t = e.t, wave = d.wave && live, sp = walk ? 7 : 2;
+    const tail = u => { const v = face < 0 ? u : 1 - u, k = clamp((v - 0.35) / 0.45, 0, 1); return Math.sin(v * 9 - t * sp) * 2.4 * e.s * k * k * (3 - 2 * k); };
+    const off = wave ? tail : u => face * bend * (1 - u) * (1 - u);
     const pose = e.lunge > 0 && ATK_H[e.type] && sprite(e.type + '_atk'), src = pose || im, hh = pose ? h * ATK_H[e.type] : h;
     const draw = c => live ? drawStrips(ctx, c, hh, 1.8, wave, off) : drawStk(ctx, c, hh, 1.8);
     draw(src);
