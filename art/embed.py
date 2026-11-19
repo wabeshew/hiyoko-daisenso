@@ -7,6 +7,7 @@ import base64, pathlib, re, struct, subprocess, tempfile, zlib
 
 ART = pathlib.Path(__file__).parent
 HTML = ART.parent / 'index.html'
+SAME_BOX = [("ic_oto", "ic_muon")]  # きりかえて だす 絵は おなじ わくで きりぬく（大きさ・いちが ずれないように）
 ICON = 96  # ic_ の アイコン：いちばん 大きく だす えらぶ がめんの 40px の 2ばい いじょう
 WIDTH = 264  # ゲームではこの半分くらいの大きさで描くので、高解像度の画面でもくっきり見える
 WIDE = {"shiro": 400, "toride": 400, "cowboy": 340, "shark": 340, "drake": 340, "knight": 340, "king": 360, "zou": 340, "tsubu": 48}  # おしろ・とりでと のりものに のった なかまは 大きく描くので、横はばを広くとる
@@ -69,7 +70,9 @@ def webp_uri(png):
             w, h = 1400, 0
             subprocess.run(['cwebp', '-quiet', '-q', '78', '-resize', '1400', '0', str(png), '-o', str(out)], check=True)
         else:
-            x, y, w, h = crop_box(png)
+            bs = [crop_box(ART / (k + '.png')) for k in next((g for g in SAME_BOX if png.stem in g), (png.stem,))]
+            x, y = min(b[0] for b in bs), min(b[1] for b in bs)
+            w, h = max(b[0] + b[2] for b in bs) - x, max(b[1] + b[3] for b in bs) - y
             subprocess.run(['cwebp', '-quiet', '-q', '85', '-alpha_q', '90', '-crop', str(x), str(y), str(w), str(h),
                             '-resize', str(ICON if png.stem.startswith('ic_') else WIDE.get(png.stem.removesuffix('_atk'), WIDTH)), '0', str(png), '-o', str(out)], check=True)
         data = out.read_bytes()
