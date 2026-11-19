@@ -1200,7 +1200,7 @@ function defeat(o, quiet) {
   if (o.side === 'foe') {
     const n = Math.round(o.d.grain * G.mods.reward);
     G.grain = Math.min(purseMax(), G.grain + n);
-    pop('🌾+' + n, o.x, feetY(o) - o.d.h * o.s - 10);
+    pop('+' + n, o.x, feetY(o) - o.d.h * o.s - 10, 'tsubu');
   }
 }
 function hitBase(side, n) {
@@ -1215,7 +1215,7 @@ function hitBase(side, n) {
   G.fx.push({ k: 'spark', x: side === 'ally' ? foeFace() : homeFace(), y: GROUND - 60 - Math.random() * 40, t: 0, life: 0.3 });
   if (b.hp <= 0) end(side === 'ally' ? 'win' : 'lose');
 }
-function pop(s, x, y) { G.fx.push({ k: 'text', s, x, y, t: 0, life: 1.1 }); }
+function pop(s, x, y, ic) { G.fx.push({ k: 'text', s, x, y, t: 0, life: 1.1, ic }); }   // ic＝もじの まえに 描く 絵（SPRITE_SRC の 名前）
 // とりでの たいほう（ステージ3）：うつ GUN.warn びょう まえから たいほうが ひかって、おちる ところに しるしが でる。
 // うつと てきが くるくる とんで、まんなか（いつも おなじ ところ）に おちる。なかまは うしろを ふりむかないので、おしろから だして まもる
 const gunX = () => G.len - HOME_X - 52, landX = () => HOME_X + (G.len - 2 * HOME_X) * GUN.at;
@@ -1738,7 +1738,16 @@ function drawFx(f) {
       ctx.fillStyle = i % 2 ? '#ffb02e' : '#ff6a2e';
       oval(f.x + f.dir * f.len * q * Math.min(1, p * 3), f.y + Math.sin(i * 2.3 + f.t * 20) * 4 * q, r, r * 0.8);
     }
-  } else if (f.k === 'text') txt(f.s, f.x, f.y - p * 30, 13, '#fff', '#e46a00');
+  } else if (f.k === 'text') {
+    const y = f.y - p * 30, im = f.ic && sprite(f.ic);
+    if (!im) txt(f.s, f.x, y, 13, '#fff', '#e46a00');
+    else {   // 絵 ＋ もじ を ひとかたまりで まんなかに
+      ctx.font = '900 13px ' + FONT;
+      const ih = 17, iw = ih * im.naturalWidth / im.naturalHeight, tw = ctx.measureText(f.s).width, x0 = f.x - (iw + 2 + tw) / 2;
+      ctx.save(); ctx.translate(x0 + iw / 2, y + ih / 2); drawStk(ctx, im, ih, 1.5); ctx.restore();
+      txt(f.s, x0 + iw + 2 + tw / 2, y, 13, '#fff', '#e46a00');
+    }
+  }
   else if (f.k === 'stars') {   // とびちる 星（なげた ボールの ように おちる）
     ctx.strokeStyle = LINE; ctx.lineWidth = 1.5;
     for (const s of f.ps) { ctx.fillStyle = s.c; starPath(f.x + s.vx * f.t, f.y + s.vy * f.t + 260 * f.t * f.t, s.r, s.r * 0.45, s.sp * f.t); ctx.fill(); ctx.stroke(); }
