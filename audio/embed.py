@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""audio/se/*（ドラが フリー素材サイトから あつめた 効果音。wav・mp3・ogg）を mp3 に して、
+index.html の SE_SRC（// SOUNDS:BEGIN 〜 // SOUNDS:END）に うめこむ。
+使い方: uv run --with av --with numpy audio/embed.py
+ファイル名から se_ を とった ものが sfx の 名前（se_hit.ogg → sfx.hit）。ある 音は 合成音の かわりに なる。
+モノラルに して、あたまの 無音を けずり、CUT の ながさで きって、LOUD の 大きさに そろえる。"""
+import base64, io, pathlib, re
+import av, numpy as np
+
+SE = pathlib.Path(__file__).parent / 'se'
+HTML = pathlib.Path(__file__).parent.parent / 'index.html'
+SR = 44100
+# ながさの 上限（びょう）。れんだで かさなる 音は みじかく（every() の 間かく 0.05〜0.1びょう）。ないものは そのまま
+CUT = {'hit': .2, 'kb': .3, 'base': .2, 'deploy': .24}   # deploy は「ピヨ」1かいぶん
+# 大きさ（A特性で はかった いちばん 大きい 50ミリびょうの dB）。おいかえす ＞ ふっとぶ ＞ ヒット ＞ だす（桜井 #032）。
+# A特性は ひくい 音を かるく はかる（スマホの スピーカーでは ひくい 音は でない）。とがった ところが 0.9 を こえる 音は そこで 上限
+LOUD = {'pop': -19, 'kb': -21, 'hit': -23, 'deploy': -26, 'thud': -22, 'base': -24, 'crash': -19, 'cannon': -14}
+FADE = .03
+
+
+def load(p):
+    c = av.open(str(p))
+    r = av.AudioResampler(format='flt', layout='mono', rate=SR)
+    return np.concatenate([f.to_ndarray().reshape(-1) for fr in c.decode(c.streams.audio[0]) for f in r.resample(fr)])
+
+
+def a_weight(x):
+    f = np.fft.rfftfreq(len(x), 1 / SR) + 1e-9
+    ra = 12194 ** 2 * f ** 4 / ((f ** 2 + 20.6 ** 2) * np.sqrt((f ** 2 + 107.7 ** 2) * (f ** 2 + 737.9 ** 2)) * (f ** 2 + 12194 ** 2))
+    return np.fft.irfft(np.fft.rfft(x) * ra * 10 ** (2 / 20), len(x))
+
+
+def level(x):
+    n = int(.05 * SR)
+    return 20 * np.log10(max(np.sqrt(np.mean(x[i:i + n] ** 2)) for i in range(0, max(1, len(x) - n), n // 4)))
+
+
+def lowcut(x):   # 60Hz いかを けし、150Hz まで だんだん のこす。きこえない ひくい 音が とがった ところを つくって 大きく できないので
+    n = len(x); f = np.fft.rfftfreq(2 * n, 1 / SR)
+    return np.fft.irfft(np.fft.rfft(x, 2 * n) * np.clip((f - 60) / 90, 0, 1), 2 * n)[:n]
+
+
+def shape(k, x):
+    x = lowcut(x)
+    pk = np.abs(x).max()
+    x = x[max(0, np.argmax(np.abs(x) > pk * .05) - int(.003 * SR)):]   # あたまの 無音（おした しゅんかんに なるように）
+    x = x[:len(x) - np.argmax(np.abs(x[::-1]) > pk * .003)]   # おしりの 無音
+    if k in CUT and len(x) > CUT[k] * SR:
+        x = x[:int(CUT[k] * SR)].copy()
+    n = min(int(FADE * SR), len(x) // 4)
+    x[-n:] *= np.linspace(1, 0, n)
+    g, lim = 10 ** ((LOUD.get(k, -20) - level(a_weight(x))) / 20), .9 / np.abs(x).max()
+    return x * min(g, lim), g > lim
+
+
+def mp3(x):
+    buf = io.BytesIO()
+    with av.open(buf, 'w', format='mp3') as out:
+        s = out.add_stream('libmp3lame', rate=SR, layout='mono')
+        s.bit_rate = 96000
+        f = av.AudioFrame.from_ndarray(x.astype(np.float32).reshape(1, -1), format='fltp', layout='mono')
+        f.sample_rate = SR
+        for p in s.encode(f): out.mux(p)
+        for p in s.encode(None): out.mux(p)
+    return buf.getvalue()
+
+
+html = HTML.read_text()
+names = set(re.findall(r'^  (\w+)\(', html.split('const sfx = {')[1].split('\n};')[0], re.M))
+lines = []
+for p in sorted(SE.glob('*')):
+    if p.suffix not in ('.wav', '.mp3', '.ogg'): continue
+    k = p.stem.removeprefix('se_')
+    assert k in names, f'{p.name}: sfx に {k} が ない'
+    x, capped = shape(k, load(p))
+    data = mp3(x)
+    print(f'  {k}: {len(x) / SR:.2f}びょう {level(a_weight(x)):.0f}dB(A){"（とがった ところで 上限）" if capped else ""} → {len(data) // 1024}KB')
+    lines.append(f"  {k}: 'data:audio/mpeg;base64,{base64.b64encode(data).decode()}',")
+block = '// SOUNDS:BEGIN（audio/embed.py が書きかえる）\nconst SE_SRC = {\n' + '\n'.join(lines) + '\n};\n// SOUNDS:END'
+html, n = re.subn(r'// SOUNDS:BEGIN.*?// SOUNDS:END', lambda _: block, html, flags=re.S)
+assert n == 1, 'index.html に // SOUNDS:BEGIN 〜 // SOUNDS:END が ない'
+HTML.write_text(html)
+print(f'{len(lines)} この 音を うめこみました')
