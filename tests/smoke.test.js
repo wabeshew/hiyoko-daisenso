@@ -280,7 +280,7 @@ D.hitBase('foe', 1);
 assert.strictEqual(waves(), 1, 'おしろが はんぶんを きっても コケコッコー！しない');
 D.hitBase('foe', D.G.home.max * 0.3);
 assert.strictEqual(waves(), 2, 'おしろが 4ぶんの1を きっても コケコッコー！しない');
-assert.ok(D.mateCard('king').includes('🌾600') && D.mateCard('king').includes('えさばこを'), 'なかまの カードに つぶが 出ない');
+assert.ok(D.mateCard('king').includes('class="gic"></i>600') && D.mateCard('king').includes('えさばこを'), 'なかまの カードに つぶが 出ない');
 console.log('ok  おしろの コケコッコー！');
 // ステージ2・3 の あたらしい てき：シマウマは むれ（3びき）で でる。ゾウは おしかえす（kb が 1 の からぴよ・きしぴよは おされない）
 Math.random = seeded(13);
