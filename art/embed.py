@@ -70,7 +70,7 @@ def webp_uri(png):
         else:
             x, y, w, h = crop_box(png)
             subprocess.run(['cwebp', '-quiet', '-q', '85', '-alpha_q', '90', '-crop', str(x), str(y), str(w), str(h),
-                            '-resize', str(WIDE.get(png.stem, WIDTH)), '0', str(png), '-o', str(out)], check=True)
+                            '-resize', str(WIDE.get(png.stem.removesuffix('_atk'), WIDTH)), '0', str(png), '-o', str(out)], check=True)
         data = out.read_bytes()
     print(f'  {png.stem}: {w}x{h} → {len(data) // 1024}KB')
     return 'data:image/webp;base64,' + base64.b64encode(data).decode()
