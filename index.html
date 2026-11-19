@@ -190,6 +190,16 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 .pick.off{ opacity:.55; filter:grayscale(.7); }
 .pick .cost{ font-size:13px; color:var(--ink); background:#fff; border:2px solid var(--rim); border-radius:999px; padding:0 7px; vertical-align:2px; }
 .won{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:6px 0; font-size:22px; }
+/* デバッグ（?debug の ときだけ） */
+.dbgrow{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; font-size:14px; }
+.dbgrow select, .dbgunit select{ font:inherit; padding:3px 6px; border:2px solid var(--rim); border-radius:10px; background:#fff; color:var(--ink); }
+.dbgunits{ display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin:10px 0; text-align:left; }
+.dbgunit{ display:flex; align-items:center; gap:4px; min-width:0; background:var(--soft); border-radius:12px; padding:4px 6px; font-size:12px; }
+.dbgunit img{ flex:none; height:28px; width:30px; object-fit:contain; }
+.dbgunit .n{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dbgunit .e{ font-size:22px; }
+.dbgunit select{ flex:none; padding:2px 4px; }
+.dbgfree{ font-size:14px; }
 
 /* タイトル：のはらの けしきに おしろと なかまが ならぶ */
 .scene{ padding:0; background:var(--sky1) center bottom / cover no-repeat; flex-direction:column; align-items:center; overflow:hidden; }
@@ -270,7 +280,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
   <header id="hud">
     <button id="pauseBtn" class="round" type="button" aria-label="おやすみ">⏸</button>
     <div id="stageName" class="pill sname"></div>
-    <div id="grainPill" class="pill grain" aria-label="つぶ">🌾 <b id="grainN">0</b><small> / <span id="grainMax">0</span></small></div>
+    <div id="grainPill" class="pill grain" aria-label="えさ">🌾 <b id="grainN">0</b><small> / <span id="grainMax">0</span></small></div>
     <button id="mute" class="round" type="button" aria-label="おとを けす">🔊</button>
   </header>
 
@@ -312,7 +322,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
         <button id="contBtn" class="big" type="button" hidden>つづきから</button>
         <button id="playBtn" class="big" type="button">スタート！</button>
       </div>
-      <div class="title-row"><button id="howBtn" class="chip" type="button">❓ あそびかた</button></div>
+      <div class="title-row"><button id="howBtn" class="chip" type="button">❓ あそびかた</button><button id="dbgBtn" class="chip" type="button" hidden>🛠 デバッグ</button></div>
     </div>
     <div class="badge-l pill">🏆 クリア <b id="winCount">0</b> かい</div>
     <div class="badge-r"><span id="runInfo1">ぼうけんの はじまり</span><b id="runInfo2">のはら</b></div>
@@ -323,8 +333,8 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
       <h2>あそびかた</h2>
       <ul class="howto">
         <li><span class="ic">🗺️</span><span>ステージは 3つ。ちずで すすむ みちを えらぼう。さいごに ボスが まってるよ</span></li>
-        <li><span class="ic">🐤</span><span>したの ボタンで なかまを だそう。つぶ 🌾を つかうよ</span></li>
-        <li><span class="ic">🧺</span><span>えさばこを おおきくすると、つぶが はやく たまるよ</span></li>
+        <li><span class="ic">🐤</span><span>したの ボタンで なかまを だそう。えさ 🌾を つかうよ</span></li>
+        <li><span class="ic">🧺</span><span>えさばこを おおきくすると、えさが はやく たまるよ</span></li>
         <li><span class="ic">📣</span><span>コケコッコー！が ひかったら おしてね。てきが ふっとぶよ</span></li>
         <li><span class="ic">🎁</span><span>かつと なかまを ひとり えらべるよ。レリックを あつめると もっと つよく なる</span></li>
         <li><span class="ic">🪙</span><span>かつと コインが もらえるよ。🏪 おみせで なかまや レリックを かおう</span></li>
@@ -394,6 +404,23 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
       <button id="resumeBtn" class="big" type="button">つづける</button>
       <button class="sub toTitle" type="button">やめて タイトルに もどる</button>
       <p class="tip">つぎに つづきから あそぶと、この たたかいの まえから はじまるよ</p>
+    </div>
+  </section>
+
+  <!-- デバッグ（URL に ?debug を つけた ときだけ タイトルに 🛠 が でる） -->
+  <section id="debugScreen" class="overlay hidden">
+    <div class="card">
+      <h2>デバッグ</h2>
+      <div class="dbgrow">
+        <label>ステージ <select id="dbgAct"></select></label>
+        <label>だん <select id="dbgFloor"></select></label>
+        <label>しゅるい <select id="dbgKind"><option value="fight">⚔️ たたかい</option><option value="elite">💥 つよい てき</option></select></label>
+      </div>
+      <div id="dbgUnits" class="dbgunits"></div>
+      <label class="dbgfree"><input id="dbgFree" type="checkbox"> えさ むげん（えさばこ さいだい）</label>
+      <p id="dbgMsg" class="tip"></p>
+      <button id="dbgGo" class="big" type="button">はじめる</button>
+      <button class="sub toTitle" type="button">タイトルに もどる</button>
     </div>
   </section>
 </div>
@@ -485,17 +512,17 @@ const fortName = a => FOES[STAGES[a].boss].name + 'の とりで';
 
 // レリック：もっている あいだ ずっと きく。mod の かけざん（startGrain と home は たしざん）は runMods() で まとめる。heart は もらった ときに ハートが ふえる
 const RELICS = {
-  basket: { icon: '🧺', name: 'きんの えさばこ',     desc: 'つぶが 3わり はやく たまる',             mod: { grainRate: 1.3 } },
-  bento:  { icon: '🍙', name: 'おべんとう',           desc: 'さいしょの つぶが 150 ふえる',           mod: { startGrain: 150 } },
+  basket: { icon: '🧺', name: 'きんの えさばこ',     desc: 'えさが 3わり はやく たまる',             mod: { grainRate: 1.3 } },
+  bento:  { icon: '🍙', name: 'おべんとう',           desc: 'さいしょの えさが 150 ふえる',           mod: { startGrain: 150 } },
   shell:  { icon: '🥚', name: 'かたい からの かけら', desc: 'なかまの HPが 3わり ふえる',             mod: { hp: 1.3 } },
   pepper: { icon: '🌶️', name: 'げきから とうがらし', desc: 'なかまの こうげきが 3わり つよく なる',   mod: { atk: 1.3 } },
   shoes:  { icon: '👟', name: 'はやい くつ',          desc: 'なかまが 3わり はやく あるく',                 mod: { speed: 1.3 } },
   clock:  { icon: '⏰', name: 'めざまし どけい',      desc: 'コケコッコー！が 1.5ばい はやく たまる',         mod: { cannonCd: 0.65 } },
   horn:   { icon: '📢', name: 'おおきな メガホン',    desc: 'コケコッコー！が 2ばい つよい',          mod: { cannonDmg: 2 } },
-  clover: { icon: '🍀', name: 'よつばの クローバー',  desc: 'てきを おいかえすと もらえる つぶが 2ばい', mod: { reward: 2 } },
+  clover: { icon: '🍀', name: 'よつばの クローバー',  desc: 'てきを おいかえすと もらえる えさが 2ばい', mod: { reward: 2 } },
   bell:   { icon: '🔔', name: 'よびだし ベル',        desc: 'なかまを つぎに だせるまでが 1.5ばい はやい',     mod: { cd: 0.65 } },
-  coupon: { icon: '🎫', name: 'わりびき けん',        desc: 'なかまを だす つぶが 2わり やすい',      mod: { cost: 0.8 } },
-  jar:    { icon: '🏺', name: 'おおきな つぼ',        desc: 'つぶを 1.5ばい ためられる',             mod: { grainMax: 1.5 } },
+  coupon: { icon: '🎫', name: 'わりびき けん',        desc: 'なかまを だす えさが 2わり やすい',      mod: { cost: 0.8 } },
+  jar:    { icon: '🏺', name: 'おおきな つぼ',        desc: 'えさを 1.5ばい ためられる',             mod: { grainMax: 1.5 } },
   brick:  { icon: '🧱', name: 'れんがの かべ',        desc: 'おしろの HPが 400 ふえる',               mod: { home: 400 } },
   charm:  { icon: '💝', name: 'ハートの おまもり',    desc: 'ハートが 1つ ふえる',                    mod: {}, heart: 1 }
 };
@@ -545,7 +572,7 @@ const TIPS = [
   ['まめぴよは うしろから まめを なげるよ。まもってあげてね', 'mame'],
   ['カウボーイぴよの なげなわで てきを とめよう', 'cowboy'],
   ['コケコッコー！で てきを ふっとばして、すきに なかまを だそう', null],
-  ['ちょっと たかい なかまは、つよいよ。つぶを ためて だしてみよう', null]
+  ['ちょっと たかい なかまは、つよいよ。えさを ためて だしてみよう', null]
 ];
 
 // ===================== DOM =====================
@@ -562,7 +589,8 @@ const els = {
   stageBtn: $('stageBtn'), loseNew: $('loseNew'),
   loseAgain: Array.from(document.querySelectorAll('.loseAgain')), loseOver: Array.from(document.querySelectorAll('.loseOver'))
 };
-const OVERLAYS = ['titleScreen', 'howScreen', 'mapScreen', 'pickScreen', 'winScreen', 'loseScreen', 'pauseScreen'];
+const OVERLAYS = ['titleScreen', 'howScreen', 'mapScreen', 'pickScreen', 'winScreen', 'loseScreen', 'pauseScreen', 'debugScreen'];
+Object.assign(els, { dbgBtn: $('dbgBtn'), dbgAct: $('dbgAct'), dbgFloor: $('dbgFloor'), dbgKind: $('dbgKind'), dbgUnits: $('dbgUnits'), dbgFree: $('dbgFree'), dbgMsg: $('dbgMsg') });
 
 // ===================== UTILS =====================
 const TAU = Math.PI * 2, FONT = '"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif';
@@ -575,7 +603,7 @@ function shuffle(a, rand) { for (let i = a.length - 1; i > 0; i--) { const j = M
 // ===================== SAVE =====================
 // いまの ぼうけん（run）を まるごと しまう。マスを おえるたびに しまうので、たたかいの とちゅうで やめると その まえから やりなおし
 const SAVE_KEY = 'hiyoko-daisenso-v2';
-function saveRun(r) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(r || run)); } catch (_) {} }
+function saveRun(r) { r = r || run; if (r.debug) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(r)); } catch (_) {} }   // デバッグの たたかいは しまわない
 function loadRun() { try { const r = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return r && r.v === 2 ? Object.assign({ act: 0, coins: 0, slots: START_SLOTS }, r) : null; } catch (_) { return null; } }
 function clearRun() { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} }
 
@@ -711,7 +739,11 @@ function newBattle(st, info) {
 function showOverlay(id) { for (const o of OVERLAYS) $(o).classList.toggle('hidden', o !== id); }
 function startBattle(node, kind) {
   const r = node === 'boss' ? FLOORS : run.map.nodes[node].r;
-  newBattle(battleDef(r, kind, run.act), { node, kind, r });
+  playBattle(battleDef(r, kind, run.act), { node, kind, r });
+}
+function playBattle(st, info) {
+  const kind = info.kind;
+  newBattle(st, info);
   mode = 'playing'; showOverlay(null);
   setupUnitButtons();
   stageLabel();
@@ -750,6 +782,7 @@ function end(r) {
 // たたかいの あと：まけたら ハートが へる（なくなったら ぼうけんは おしまい）。
 // かったら マスを すすめて、なかま（つよい てきなら さきに レリック）を えらぶ
 function finish() {
+  if (run.debug) { openDebug(); return; }   // デバッグ：ハート・セーブ・ごほうびには さわらず デバッグに もどる
   const { node, kind } = G.info;
   if (G.result === 'lose') {
     run.hearts--; mode = 'lose'; stageLabel();
@@ -798,10 +831,10 @@ function stageClear() {
 }
 // まけかたに あう ヒント：つぶを ためすぎた → コケコッコー！を つかわなかった → えさばこを おおきく しなかった → ほかは もっている なかまの ヒント
 function loseTip() {
-  if (G.dropPoor >= 2) return 'たいほうで てきが とんで くるよ。つぶを すこし のこして おこう';
-  if (G.capT > 20) return 'つぶが いっぱいに なったら、すぐ なかまを だそう';
+  if (G.dropPoor >= 2) return 'たいほうで てきが とんで くるよ。えさを すこし のこして おこう';
+  if (G.capT > 20) return 'えさが いっぱいに なったら、すぐ なかまを だそう';
   if (G.idleC > 20) return 'コケコッコー！が ひかったら おしてね。てきが ふっとぶよ';
-  if (!G.purse) return 'えさばこを おおきくすると、つぶが はやく たまるよ';
+  if (!G.purse) return 'えさばこを おおきくすると、えさが はやく たまるよ';
   const t = TIPS.filter(x => !x[1] || run.party[x[1]]);
   return t[Math.floor(Math.random() * t.length)][0];
 }
@@ -822,6 +855,36 @@ function restartStage(r) {
 function stageAgain() { run = loadRun() || restartStage(run); openMap(); }
 // ハートが なくなった あとの あたらしい ぼうけん：がんばった ごほうびに、なかまを ひとり つれて いける（はじめから いる なかま いがい）
 const carryKeys = () => UNIT_ORDER.filter(k => run.party[k] && !START_PARTY[k]);
+// ===================== DEBUG =====================
+// URL に ?debug を つけて ひらくと、タイトルに 🛠。ステージ・だん・なかま（Lv）を えらんで その たたかいを ためす。
+// ハート・セーブ・ごほうびには さわらない（run.debug。saveRun() が しまわない）。えさ むげんは えさばこ さいだいで いつも いっぱい
+const DEBUG = typeof location !== 'undefined' && /[?&]debug\b/.test(location.search);
+// cfg＝{ act: ステージ（0から）, r: だん（0から。FLOORS で ボス）, kind: 'fight' か 'elite', party: { 名前: Lv }, free: えさ むげん }
+function debugBattle(cfg) {
+  const kind = cfg.r >= FLOORS ? 'boss' : cfg.kind;
+  run = { v: 2, seed: 1, act: cfg.act, map: makeMap(seeded(1)), path: [], hearts: START_HEARTS, coins: 0, slots: Math.max(START_SLOTS, Object.keys(cfg.party).length),
+    party: cfg.party, relics: [], debug: true, free: !!cfg.free };
+  playBattle(battleDef(Math.min(cfg.r, FLOORS), kind, cfg.act), { node: -1, kind, r: cfg.r });
+}
+let dbgBuilt = false;
+function openDebug() {
+  mode = 'debug'; showOverlay('debugScreen');
+  if (dbgBuilt) return;   // えらんだ ものは のこす
+  dbgBuilt = true;
+  els.dbgAct.innerHTML = STAGES.map((S, a) => '<option value="' + a + '">' + (a + 1) + '（' + FOES[S.boss].name + '）</option>').join('');
+  els.dbgFloor.innerHTML = Array.from({ length: FLOORS }, (_, r) => '<option value="' + r + '">' + (r + 1) + '</option>').join('') + '<option value="' + FLOORS + '">ボス</option>';
+  els.dbgUnits.innerHTML = UNIT_ORDER.map(k => '<label class="dbgunit" title="' + UNITS[k].name + '"><input type="checkbox" data-k="' + k + '"' + (START_PARTY[k] ? ' checked' : '') + '>' + unitIcon(k) + '<span class="n">' + UNITS[k].name + '</span>' +
+    '<select data-k="' + k + '"><option>1</option><option>2</option><option>3</option></select></label>').join('');
+}
+function debugGo() {
+  const party = {};
+  for (const c of els.dbgUnits.querySelectorAll('input:checked')) party[c.dataset.k] = +els.dbgUnits.querySelector('select[data-k="' + c.dataset.k + '"]').value;
+  const n = Object.keys(party).length;
+  if (!n || n > MAX_SLOTS) { els.dbgMsg.textContent = 'なかまは 1〜' + MAX_SLOTS + '人 えらんでね'; return; }
+  els.dbgMsg.textContent = '';
+  debugBattle({ act: +els.dbgAct.value, r: +els.dbgFloor.value, kind: els.dbgKind.value, party, free: els.dbgFree.checked });
+}
+
 function carryMate() {
   const ks = carryKeys(), go = k => { newRun(k); openMap(); };
   if (!ks.length) { go(); return; }
@@ -1158,7 +1221,7 @@ function fortGun(dt) {
   if (!g.warned && G.t >= g.next - GUN.warn) {
     g.warned = true; sfx.alert();
     const seen = run && (run.seen || (run.seen = {}));
-    if (seen && !seen.taiho) { seen.taiho = 1; banner('たいほうが くるよ！', 'まんなかに てきが おちて くるよ。つぶを すこし のこして おこう'); }
+    if (seen && !seen.taiho) { seen.taiho = 1; banner('たいほうが くるよ！', 'まんなかに てきが おちて くるよ。えさを すこし のこして おこう'); }
   }
   if (G.t >= g.next) {
     g.next += g.every; g.warned = false; g.kick = 0.3; sfx.gun(); shake(1);
@@ -1222,6 +1285,7 @@ function update(dt) {
   if (mode !== 'playing') return;
   G.t += dt;
   G.grain = Math.min(purseMax(), G.grain + purseRate() * dt);
+  if (run && run.free) { G.purse = PURSE.length - 1; G.grain = purseMax(); }   // デバッグの えさ むげん
   if (G.grain >= purseMax()) G.capT += dt;
   if (G.cannon >= G.cannonCd) G.idleC += dt;
   G.warn = Math.max(0, G.warn - dt);
@@ -1782,7 +1846,7 @@ function setupUnitButtons() {
     el.querySelector('.uimg').innerHTML = k ? unitIcon(k) : '';
     el.querySelector('.ucost').textContent = k ? (n > START_SLOTS ? '' : '🌾') + unitCost(k) : '';   // ほそい ときは かずだけ
     el.querySelector('.ulv').textContent = lv > 1 ? 'Lv' + lv : '';
-    el.setAttribute('aria-label', k ? UNITS[k].name + ' Lv' + lv + '（つぶ ' + unitCost(k) + '）' : 'まだ いないよ');
+    el.setAttribute('aria-label', k ? UNITS[k].name + ' Lv' + lv + '（えさ ' + unitCost(k) + '）' : 'まだ いないよ');
   });
 }
 function hudUpdate() {
@@ -1871,6 +1935,9 @@ els.play.addEventListener('click', () => {
 els.cont.addEventListener('click', () => { ensureAudio(); run = loadRun(); if (run) openMap(); });
 $('howBtn').addEventListener('click', () => { ensureAudio(); showOverlay('howScreen'); });
 $('howClose').addEventListener('click', openTitle);
+els.dbgBtn.hidden = !DEBUG;
+els.dbgBtn.addEventListener('click', () => { ensureAudio(); openDebug(); });
+$('dbgGo').addEventListener('click', () => { ensureAudio(); debugGo(); });
 els.mapBox.addEventListener('click', e => {
   const b = e.target.closest('.node');
   if (!b) return;

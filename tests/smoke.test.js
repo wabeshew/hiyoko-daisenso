@@ -8,7 +8,7 @@ const path = require('path');
 const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,stageAgain,carryMate,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
+js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,stageAgain,carryMate,debugBattle,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
   'FLOORS,COLS,RELICS,UNITS,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -342,4 +342,17 @@ const dropped = D.G.ents.filter(x => x.type === 'hebi' && x.side === 'foe');
 assert.strictEqual(dropped.length, 3, 'たいほうで てきが 3びき おちない');
 assert.ok(dropped.every(x => Math.abs(x.x - D.G.len / 2) < D.G.len * 0.2), 'まんなかに おちない: ' + dropped.map(x => Math.round(x.x)));
 console.log('ok  とりでの たいほう');
+// デバッグ：えらんだ ステージ・だん・なかまで たたかい、おわると デバッグに もどる。セーブには さわらない
+Math.random = seeded(23);
+D.newRun(); D.openMap();
+const realSave = store[SAVE];
+D.debugBattle({ act: 2, r: D.FLOORS, kind: 'fight', party: { king: 3, knight: 2 }, free: true });
+assert.strictEqual(D.G.info.kind, 'boss'); assert.strictEqual(D.G.st.name, 'ゴリラの とりで');
+assert.deepStrictEqual(D.G.slots, ['knight', 'king']);
+D.update(1 / 30);
+assert.ok(D.G.grain >= 1000, 'えさ むげんに ならない: ' + D.G.grain);
+D.hitBase('ally', 1e9); fight(null);
+assert.strictEqual(D.mode, 'debug', 'おわっても デバッグに もどらない: ' + D.mode);
+assert.strictEqual(store[SAVE], realSave, 'デバッグで セーブが かわった');
+console.log('ok  デバッグ');
 console.log('ぜんぶ OK');
