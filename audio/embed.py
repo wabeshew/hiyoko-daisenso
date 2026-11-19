@@ -11,11 +11,12 @@ SE = pathlib.Path(__file__).parent / 'se'
 HTML = pathlib.Path(__file__).parent.parent / 'index.html'
 SR = 44100
 # ながさの 上限（びょう）。れんだで かさなる 音は みじかく（every() の 間かく 0.05〜0.1びょう）。ないものは そのまま
-CUT = {'hit': .2, 'kb': .3, 'base': .2, 'deploy': .24}   # deploy は「ピヨ」1かいぶん
+CUT = {'hit': .2, 'kb': .3, 'base': .2, 'deploy': .24, 'boss': 1.2}   # deploy は「ピヨ」1かいぶん、boss は たいこの「ドン」と ひびきの はじめ
 # 大きさ（A特性で はかった いちばん 大きい 50ミリびょうの dB）。おいかえす ＞ ふっとぶ ＞ ヒット ＞ だす（桜井 #032）。
 # A特性は ひくい 音を かるく はかる（スマホの スピーカーでは ひくい 音は でない）。とがった ところが 0.9 を こえる 音は そこで 上限
-LOUD = {'pop': -19, 'kb': -21, 'hit': -23, 'deploy': -26, 'thud': -22, 'base': -24, 'crash': -19, 'cannon': -14}
-FADE = .03
+LOUD = {'pop': -19, 'kb': -21, 'hit': -23, 'deploy': -26, 'thud': -22, 'base': -24, 'crash': -19, 'cannon': -18,
+        'gun': -18, 'shot': -28, 'tap': -26, 'coin': -22, 'win': -19, 'lose': -21, 'boss': -18, 'clear': -17}
+FADE = {'boss': .35}   # おわりを けす ながさ（びょう）。ないものは 0.03
 
 
 def load(p):
@@ -47,7 +48,7 @@ def shape(k, x):
     x = x[:len(x) - np.argmax(np.abs(x[::-1]) > pk * .003)]   # おしりの 無音
     if k in CUT and len(x) > CUT[k] * SR:
         x = x[:int(CUT[k] * SR)].copy()
-    n = min(int(FADE * SR), len(x) // 4)
+    n = min(int(FADE.get(k, .03) * SR), len(x) // 4)
     x[-n:] *= np.linspace(1, 0, n)
     g, lim = 10 ** ((LOUD.get(k, -20) - level(a_weight(x))) / 20), .9 / np.abs(x).max()
     return x * min(g, lim), g > lim
@@ -68,7 +69,7 @@ def mp3(x):
 html = HTML.read_text()
 names = set(re.findall(r'^  (\w+)\(', html.split('const sfx = {')[1].split('\n};')[0], re.M))
 lines = []
-for p in sorted(SE.glob('*')):
+for p in sorted(SE.glob('*')):   # つかわない 音は audio/se/unused/ に
     if p.suffix not in ('.wav', '.mp3', '.ogg'): continue
     k = p.stem.removeprefix('se_')
     assert k in names, f'{p.name}: sfx に {k} が ない'
