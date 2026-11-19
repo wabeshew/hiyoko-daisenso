@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""art/*.png（codex で作った背景が透明な絵）の余白を切り抜いて WebP にし（bg_ で はじまる せなかの けしきは きりぬかない）、
+"""art/*.png（codex で作った背景が透明な絵）の余白を切り抜いて WebP にし（bg_ で はじまる せなかの けしきは きりぬかない。ic_ で はじまる 画面の アイコンは よこ 96px）、
 index.html の SPRITE_SRC（// SPRITES:BEGIN 〜 // SPRITES:END）に埋め込む。
 使い方: python3 art/embed.py   （macOS の sips と cwebp を使う）
 ファイル名（拡張子なし）がそのまま SPRITE_SRC のキーになる。"""
@@ -7,6 +7,7 @@ import base64, pathlib, re, struct, subprocess, tempfile, zlib
 
 ART = pathlib.Path(__file__).parent
 HTML = ART.parent / 'index.html'
+ICON = 96  # ic_ の アイコン：いちばん 大きく だす えらぶ がめんの 40px の 2ばい いじょう
 WIDTH = 264  # ゲームではこの半分くらいの大きさで描くので、高解像度の画面でもくっきり見える
 WIDE = {"shiro": 400, "toride": 400, "cowboy": 340, "shark": 340, "drake": 340, "knight": 340, "king": 360, "zou": 340, "tsubu": 48}  # おしろ・とりでと のりものに のった なかまは 大きく描くので、横はばを広くとる
 
@@ -70,7 +71,7 @@ def webp_uri(png):
         else:
             x, y, w, h = crop_box(png)
             subprocess.run(['cwebp', '-quiet', '-q', '85', '-alpha_q', '90', '-crop', str(x), str(y), str(w), str(h),
-                            '-resize', str(WIDE.get(png.stem.removesuffix('_atk'), WIDTH)), '0', str(png), '-o', str(out)], check=True)
+                            '-resize', str(ICON if png.stem.startswith('ic_') else WIDE.get(png.stem.removesuffix('_atk'), WIDTH)), '0', str(png), '-o', str(out)], check=True)
         data = out.read_bytes()
     print(f'  {png.stem}: {w}x{h} → {len(data) // 1024}KB')
     return 'data:image/webp;base64,' + base64.b64encode(data).decode()
