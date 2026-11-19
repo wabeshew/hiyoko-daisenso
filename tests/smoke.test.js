@@ -328,4 +328,18 @@ D.picks[0].go();
 assert.deepStrictEqual(D.run.party, { piyo: 1, kara: 1, kokko: 1 }, 'つれて いった なかまが いない');
 assert.strictEqual(D.run.act, 0); assert.strictEqual(D.mode, 'map');
 console.log('ok  やりなおしと つれて いく なかま');
+// ステージ3 の とりでの たいほう：うつ まえに しらせて、てきを まんなかに 3びき おとす（ステージ1・2 には ない）
+Math.random = seeded(19);
+D.newRun(); D.openMap();
+assert.ok(!D.battleDef(3, 'fight', 1).gun && !D.battleDef(3, 'fight', 0).gun, 'ステージ1・2 に たいほうが ある');
+assert.ok(D.battleDef(3, 'fight', 2).gun && D.battleDef(8, 'boss', 2).gun, 'ステージ3 に たいほうが ない');
+D.run.act = 2;
+D.startBattle(D.nextNodes()[0], 'fight');
+D.G.waves.length = 0;
+D.G.gun.next = D.G.t + 2.5;
+for (let n = 0; n < 30 * 4; n++) D.update(1 / 30);
+const dropped = D.G.ents.filter(x => x.type === 'hebi' && x.side === 'foe');
+assert.strictEqual(dropped.length, 3, 'たいほうで てきが 3びき おちない');
+assert.ok(dropped.every(x => Math.abs(x.x - D.G.len / 2) < D.G.len * 0.2), 'まんなかに おちない: ' + dropped.map(x => Math.round(x.x)));
+console.log('ok  とりでの たいほう');
 console.log('ぜんぶ OK');

@@ -16,6 +16,17 @@ module.exports = ({ D, fight, kid, seeded, store, SAVE, els }) => {
     const ok = G.slots.map((k, i) => i).filter(i => G.grain >= D.UNITS[G.slots[i]].cost * G.mods.cost && !(G.cool[G.slots[i]] > 0));
     if (ok.length) D.deploy(ok[Math.floor(Math.random() * ok.length)]);
   };
+  // のこす：ふつうと おなじ はやさで おすが、つぶを 120 のこす。たいほうが ひかって いる・とんで いる・てきが うしろに いる ときだけ つかいきる
+  function saver() {
+    const G = D.G; G._k = (G._k || 0) + 1 / 30; if (G._k < 0.7) return; G._k = 0;
+    if (G.cannon >= G.cannonCd && Math.random() < 0.7) { D.fireCannon(); return; }
+    const front = Math.max(-1, ...G.ents.filter(e => e.side === 'ally' && e.st !== 'gone').map(e => e.x));
+    const danger = (G.gun && G.gun.warned) || G.lobs.length || G.ents.some(e => e.side === 'foe' && e.st !== 'gone' && e.x < front - 30);
+    const P = D.PURSE[G.purse], spare = danger ? 0 : 120;
+    if (!danger && P.up && G.grain >= P.up + 100 && Math.random() < 0.3) { D.upgradePurse(); return; }
+    const ok = G.slots.map((k, i) => i).filter(i => G.grain - D.UNITS[G.slots[i]].cost * G.mods.cost >= spare && !(G.cool[G.slots[i]] > 0));
+    if (ok.length) D.deploy(ok[Math.floor(Math.random() * ok.length)]);
+  }
   // ちずでは いちばん 左、えらぶ がめんでは いちばん 上（いれかえは Lv の ひくい なかまを かえす）。conts＝「ステージの はじめから」の 上限
   function play(strat, carry, conts) {
     D.newRun(carry); D.openMap();
@@ -44,7 +55,7 @@ module.exports = ({ D, fight, kid, seeded, store, SAVE, els }) => {
     }
     return { win: D.mode === 'win', boss, fights, used, party: D.run.party };
   }
-  const STRATS = { ふつう: kid, なれていない: novice, ゆっくり3: slow(3), ゆっくり6: slow(6), ゆっくり10: slow(10) };
+  const STRATS = { ふつう: kid, のこす: saver, なれていない: novice, ゆっくり3: slow(3), ゆっくり6: slow(6), ゆっくり10: slow(10) };
   const N = +(process.env.N || 40), only = process.env.ONLY;
   for (const [name, st] of Object.entries(STRATS)) {
     if (only && !only.split(',').includes(name)) continue;
