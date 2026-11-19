@@ -8,7 +8,7 @@ const path = require('path');
 const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
+js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,stageAgain,carryMate,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
   'FLOORS,COLS,RELICS,UNITS,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -119,6 +119,9 @@ function playRun(strat) {
   return { mode: D.mode, log, run: D.run };
 }
 
+// バランスしらべ（BALANCE=1 の ときは ここから tests/balance.js だけ）
+if (process.env.BALANCE) return require('./balance.js')({ D, fight, kid, seeded, store, SAVE, els });
+
 // なにもしないと さいしょの たたかいで ハートが なくなるまで まけて、ぼうけんが おわる（セーブも きえる）
 let r = playRun(null);
 assert.strictEqual(r.mode, 'lose', 'なにもしないのに まけない');
@@ -129,8 +132,8 @@ assert.ok(!els.stageName.textContent.includes('❤️'), 'まけたのに 上の
 console.log('ok  なにもしないと まける');
 
 // ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）。
-// いれかえで からぴよを おうちに かえして まける ことも あるので、ステージ1 の クマは 6ぼうけん中 4いじょう（40ぼうけんで 31）、
-// 3つの ステージ ぜんぶは 3いじょう（40ぼうけんで 24）
+// いれかえで からぴよを おうちに かえして まける ことも あるので、ステージ1 の クマは 6ぼうけん中 4いじょう（40ぼうけんで 30）、
+// 3つの ステージ ぜんぶは 3いじょう（40ぼうけんで 26。2026-11-19 の BALANCE=1）
 let wins = 0, stage1 = 0;
 for (let s = 1; s <= 6; s++) {
   Math.random = seeded(s * 101);
@@ -279,4 +282,50 @@ D.hitBase('foe', D.G.home.max * 0.3);
 assert.strictEqual(waves(), 2, 'おしろが 4ぶんの1を きっても コケコッコー！しない');
 assert.ok(D.mateCard('king').includes('🌾600') && D.mateCard('king').includes('えさばこを'), 'なかまの カードに つぶが 出ない');
 console.log('ok  おしろの コケコッコー！');
+// ステージ2・3 の あたらしい てき：シマウマは むれ（3びき）で でる。ゾウは おしかえす（kb が 1 の からぴよ・きしぴよは おされない）
+Math.random = seeded(13);
+D.newRun(); D.openMap();
+assert.ok(!D.battleDef(5, 'fight', 0).waves.some(w => w[0] === 'shimauma' || w[0] === 'zou'), 'ステージ1 に あたらしい てきが いる');
+D.run.act = 1;
+D.startBattle(D.nextNodes()[0], 'fight');
+const herd = D.G.waves.find(w => w.type === 'shimauma');
+assert.ok(herd, 'ステージ2 に シマウマが いない');
+herd.next = 0; D.update(1 / 30);
+assert.strictEqual(D.G.ents.filter(x => x.type === 'shimauma').length, 3, 'シマウマが むれで でない');
+D.run.act = 2;
+D.startBattle(D.nextNodes()[0], 'fight');
+assert.ok(D.G.waves.some(w => w.type === 'zou'), 'ステージ3 に ゾウが いない');
+D.G.waves.length = 0;   // ほかの てきは ださない
+const zou = D.spawn('foe', 'zou'), piyo = D.spawn('ally', 'piyo'), kara = D.spawn('ally', 'kara');
+piyo.x = kara.x = zou.x - 30;
+let pushed = false, karaPushed = false;
+for (let n = 0; n < 30 * 1.5; n++) { D.update(1 / 30); pushed = pushed || piyo.st === 'kb'; karaPushed = karaPushed || kara.st === 'kb'; }
+assert.ok(pushed, 'ゾウが ぴよを おしかえさない');
+assert.ok(!karaPushed, 'ゾウが からぴよを おしかえした');
+console.log('ok  シマウマの むれと ゾウ');
+
+// ハートが なくなっても、ステージ2 から あとは その ステージの はじめから（なかま・レリック・コイン・ハートは はいった ときの まま、ちずは あたらしく）。
+// ステージ1 で なくなると セーブは きえて、つぎの ぼうけんに なかまを ひとり つれて いける
+Math.random = seeded(17);
+D.newRun();
+Object.assign(D.run, { act: 1, party: { piyo: 2, kara: 1, kokko: 2 }, relics: ['bento'], coins: 77, hearts: 4 });
+D.openMap();
+Object.assign(D.run, { coins: 5, hearts: 1 }); D.run.party.kokko = 3;
+D.goNode(D.nextNodes()[0]); D.hitBase('foe', 1e9); fight(null);
+assert.strictEqual(D.mode, 'lose'); assert.strictEqual(D.run.hearts, 0);
+const back = JSON.parse(store[SAVE] || 'null');
+assert.ok(back && back.act === 1 && back.path.length === 0 && back.hearts === 4 && back.coins === 77 && back.party.kokko === 2 && back.relics[0] === 'bento', 'ステージの はじめに もどらない: ' + store[SAVE]);
+D.stageAgain();
+assert.strictEqual(D.mode, 'map'); assert.strictEqual(D.run.act, 1);
+assert.ok(D.nextNodes().every(i => D.run.map.nodes[i].r === 0), 'ステージの 1だんめから はじまらない');
+D.newRun(); D.openMap();
+D.run.party.kokko = 2; D.run.hearts = 1;
+D.goNode(D.nextNodes()[0]); D.hitBase('foe', 1e9); fight(null);
+assert.strictEqual(store[SAVE], undefined, 'ステージ1 で おわったのに セーブが のこっている');
+D.carryMate();
+assert.strictEqual(D.mode, 'pick'); assert.strictEqual(D.picks.length, 1, 'つれて いける なかまが おかしい');
+D.picks[0].go();
+assert.deepStrictEqual(D.run.party, { piyo: 1, kara: 1, kokko: 1 }, 'つれて いった なかまが いない');
+assert.strictEqual(D.run.act, 0); assert.strictEqual(D.mode, 'map');
+console.log('ok  やりなおしと つれて いく なかま');
 console.log('ぜんぶ OK');
