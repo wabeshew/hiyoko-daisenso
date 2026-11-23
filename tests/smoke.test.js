@@ -319,6 +319,24 @@ for (const stopIt of [false, true]) {
 }
 console.log('ok  ゴリラの 大わざ');
 
+// ライオンの 大わざ：かがんで から とっしん。からぴよに ぶつかると とまって、その うしろの なかまと おしろは ぶじ。
+// からぴよが いないと おしろまで いって、とちゅうの なかまと おしろに あたる。とんで いる なかまの 下は くぐる
+for (const wall of [true, false]) {
+  D.newRun(); D.openMap(); D.run.party.king = 1; D.startBattle(D.nextNodes()[0], 'fight'); D.G.waves.length = 0;
+  const li = D.spawn('foe', 'raion', 1.3), a = D.spawn('ally', 'piyo'), b = D.spawn('ally', 'piyo'), sky = D.spawn('ally', 'king');
+  li.x = 900; a.x = 820; b.x = 300; sky.x = 600; li.hits = D.MOVES.dash.every - 1;
+  const k = wall ? D.spawn('ally', 'kara') : null; if (k) k.x = 500;
+  for (const x of [a, b, sky, k]) if (x) x.speed = 0;
+  const home = D.G.home.hp;
+  let dashed = false;
+  for (let n = 0; n < 30 * 8; n++) { D.update(1 / 30); dashed = dashed || li.st === 'dash'; }
+  const hurt = x => x.hp < x.max;
+  assert.ok(dashed && hurt(a) && !hurt(sky), 'ライオンが とっしん しない: ' + [dashed, a.hp, sky.hp]);
+  if (wall) assert.ok(hurt(k) && k.st !== 'kb' && !hurt(b) && D.G.home.hp === home, 'からぴよで とまらない: ' + [k.hp, k.st, b.hp, D.G.home.hp]);
+  else assert.ok(hurt(b) && D.G.home.hp < home, 'おしろまで とどかない: ' + [b.hp, D.G.home.hp]);
+}
+console.log('ok  ライオンの 大わざ');
+
 // コケコッコー！で てきが ふっとぶ
 D.newRun(); D.openMap();
 D.goNode(D.nextNodes()[0]);
