@@ -214,8 +214,7 @@ h2{ font-size:clamp(26px, 7.5vw, 34px); }
 /* タイトル：のはらの けしきに おしろと なかまが ならぶ */
 .scene{ padding:0; background:var(--sky1) center bottom / cover no-repeat; flex-direction:column; align-items:center; overflow:hidden; }
 .title-wrap{ position:relative; z-index:1; flex:1; width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center; padding:14px 12px 58px; min-height:0; }
-.logo{ display:block; width:min(96%, 620px); height:auto; overflow:visible; }
-@media (max-height:380px){ .logo{ width:min(96%, 620px, 130vh); } }   /* ひくい よこむきの がめんでも スタートが きれない ように */
+.logo{ display:block; width:min(96%, 620px, 130vh); height:auto; overflow:visible; }   /* 130vh＝ひくい よこむきの がめんでも スタートが きれない ように */
 .logo text{ font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",sans-serif; font-weight:900; }
 .subtitle{
   margin:clamp(16px, 3vw, 20px) 0 0; font-size:clamp(14px, 3.6vw, 20px); color:#1a7fd1; line-height:1.35; text-align:center;
@@ -457,7 +456,7 @@ const STOP = { win: 0.35, lose: 0.25, boss: 0.2, bossOut: 0.15, cannon: 0.08 };
 // がめんの ゆれ：1＝小（たてだけ）、2＝中、3＝大。t＝びょう、a＝はば（せかいの px）
 const SHAKE = [null, { t: 0.18, a: 2, x: false }, { t: 0.3, a: 4, x: true }, { t: 0.6, a: 7, x: true }];
 const TREMBLE_T = 0.1;   // ふっとぶ てきが その場で ふるえて 見える びょう（見た目だけ。じっさいは もう とんでいる）
-const FALL_T = 1.4;      // こわれた とりで・おしろが すなけむりを あげながら じめんに しずむ びょう（G.endT の 1.6 より みじかく）
+const FALL_T = 1.2;      // こわれた とりで・おしろが すなけむりを あげながら じめんに しずむ びょう（すなけむりは その 0.4びょう あとの G.endT＝1.6 で きえる）
 const RING_DMG = 40;     // この こうげき力 いじょうの 一撃は しょうげきはの わを だす
 // ステージ3 の とりでの たいほう：てきを まんなかへ うちこむ。れんだして つぶを つかいきると うしろを まもれない（リスクと リターン）。
 // warn＝うつ まえに ひかって しらせる びょう、fly＝とんで いる びょう、at＝おちる ところ（おしろ 0 〜 とりで 1。いつも おなじ）、foe と n＝うちこむ てきと かず。
