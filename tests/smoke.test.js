@@ -8,7 +8,7 @@ const path = require('path');
 const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,openMap,stageAgain,carryMate,debugBattle,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
+js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,newRelics,openMap,stageAgain,carryMate,debugBattle,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
   'FLOORS,COLS,RELICS,UNITS,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
@@ -254,6 +254,22 @@ const e = D.spawn('ally', 'piyo'), u = D.UNITS.piyo;
 assert.ok(Math.abs(e.atk - u.atk * D.LV_MUL[3] * 1.3) < 1e-9, 'こうげきが つよく ならない');
 assert.ok(Math.abs(e.max - u.hp * D.LV_MUL[3] * 1.3) < 1e-9, 'HPが ふえない');
 console.log('ok  レリックと レベル');
+
+// はじけまめ：まめぴよが いる ときだけ でる。まめが あたると、ちかくの てき 1たいにも はんぶん（はなれた てきには とばない）
+D.run.relics = []; D.run.party = { piyo: 1 };
+assert.ok(!D.newRelics().includes('hajike'), 'まめぴよが いないのに はじけまめが でる');
+D.run.party.mame = 1;
+assert.ok(D.newRelics().includes('hajike'), 'まめぴよが いるのに はじけまめが でない');
+for (const rel of [[], ['hajike']]) {
+  D.newRun(); D.openMap(); D.run.relics = rel; D.run.party.mame = 1;
+  D.startBattle(D.nextNodes()[0], 'fight');
+  D.G.waves.length = 0;
+  const mm = D.spawn('ally', 'mame'), fs3 = [0, 40, 300].map(dx => { const f = D.spawn('foe', 'hebi'); f.x = mm.x + 150 + dx; f.speed = 0; return f; });
+  for (let n = 0; n < 30 * 1.5; n++) D.update(1 / 30);
+  const lost = fs3.map(f => Math.round(f.max - f.hp)).join(' ');
+  assert.strictEqual(lost, rel.length ? '24 12 0' : '24 0 0', 'はじけまめの ダメージが おかしい: ' + lost);
+}
+console.log('ok  はじけまめ');
 
 // コケコッコー！で てきが ふっとぶ
 D.newRun(); D.openMap();
