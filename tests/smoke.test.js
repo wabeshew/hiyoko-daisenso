@@ -282,16 +282,16 @@ D.hitBase('foe', D.G.home.max * 0.3);
 assert.strictEqual(waves(), 2, 'おしろが 4ぶんの1を きっても コケコッコー！しない');
 assert.ok(D.mateCard('king').includes('class="gic"></i>600') && D.mateCard('king').includes('えさばこを'), 'なかまの カードに つぶが 出ない');
 console.log('ok  おしろの コケコッコー！');
-// ステージ2・3 の あたらしい てき：シマウマは むれ（3びき）で でる。ゾウは おしかえす（kb が 1 の からぴよ・きしぴよは おされない）
+// ステージ2・3 の あたらしい てき：サイは むれ（3びき）で でる。ゾウは おしかえす（kb が 1 の からぴよ・きしぴよは おされない）
 Math.random = seeded(13);
 D.newRun(); D.openMap();
-assert.ok(!D.battleDef(5, 'fight', 0).waves.some(w => w[0] === 'shimauma' || w[0] === 'zou'), 'ステージ1 に あたらしい てきが いる');
+assert.ok(!D.battleDef(5, 'fight', 0).waves.some(w => w[0] === 'sai' || w[0] === 'zou'), 'ステージ1 に あたらしい てきが いる');
 D.run.act = 1;
 D.startBattle(D.nextNodes()[0], 'fight');
-const herd = D.G.waves.find(w => w.type === 'shimauma');
-assert.ok(herd, 'ステージ2 に シマウマが いない');
+const herd = D.G.waves.find(w => w.type === 'sai');
+assert.ok(herd, 'ステージ2 に サイが いない');
 herd.next = 0; D.update(1 / 30);
-assert.strictEqual(D.G.ents.filter(x => x.type === 'shimauma').length, 3, 'シマウマが むれで でない');
+assert.strictEqual(D.G.ents.filter(x => x.type === 'sai').length, 3, 'サイが むれで でない');
 D.run.act = 2;
 D.startBattle(D.nextNodes()[0], 'fight');
 assert.ok(D.G.waves.some(w => w.type === 'zou'), 'ステージ3 に ゾウが いない');
@@ -302,7 +302,7 @@ let pushed = false, karaPushed = false;
 for (let n = 0; n < 30 * 1.5; n++) { D.update(1 / 30); pushed = pushed || piyo.st === 'kb'; karaPushed = karaPushed || kara.st === 'kb'; }
 assert.ok(pushed, 'ゾウが ぴよを おしかえさない');
 assert.ok(!karaPushed, 'ゾウが からぴよを おしかえした');
-console.log('ok  シマウマの むれと ゾウ');
+console.log('ok  サイの むれと ゾウ');
 
 // ハートが なくなっても、ステージ2 から あとは その ステージの はじめから（なかま・レリック・コイン・ハートは はいった ときの まま、ちずは あたらしく）。
 // ステージ1 で なくなると セーブは きえて、つぎの ぼうけんに なかまを ひとり つれて いける
