@@ -7,7 +7,7 @@ import base64, pathlib, re, struct, subprocess, tempfile, zlib
 
 ART = pathlib.Path(__file__).parent
 HTML = ART.parent / 'index.html'
-SAME_BOX = [("ic_oto", "ic_muon")]  # きりかえて だす 絵は おなじ わくで きりぬく（大きさ・いちが ずれないように）
+SAME_BOX = [("ic_oto", "ic_muon"), ("ic_esabako1", "ic_esabako2", "ic_esabako", "ic_esabako4", "ic_esabako5")]  # きりかえて だす 絵は おなじ わくで きりぬく（大きさ・いちが ずれないように。えさばこは レベルごとの 絵で、ic_esabako が Lv3）
 ICON = 96  # ic_ の アイコン：いちばん 大きく だす えらぶ がめんの 40px の 2ばい いじょう
 WIDTH = 264  # ゲームではこの半分くらいの大きさで描くので、高解像度の画面でもくっきり見える
 WIDE = {"shiro": 400, "toride": 400, "toride_taiho": 400, "cowboy": 340, "shark": 340, "drake": 340, "knight": 340, "king": 360, "zou": 340, "tsubu": 48, "ic_trophy": 192, "ic_zzz": 192}  # おしろ・とりでと のりものに のった なかまは 大きく描くので、横はばを広くとる
