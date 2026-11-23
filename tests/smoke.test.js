@@ -9,7 +9,7 @@ const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,newRelics,openMap,stageAgain,carryMate,debugBattle,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
-  'FLOORS,COLS,RELICS,UNITS,SLAM,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
+  'FLOORS,COLS,RELICS,UNITS,MOVES,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 Math.random = seeded(7);
@@ -140,13 +140,12 @@ for (let s = 1; s <= 20; s++) {
   r = playRun(kid);
   const party = D.UNIT_ORDER.filter(k => r.run.party[k]).map(k => k + r.run.party[k]).join(' ');
   console.log((r.mode === 'win' ? 'ok  ' : 'NG  ') + 'ぼうけん' + s + '：' + r.log.join(' → ') + '｜' + party + '｜レリック ' + r.run.relics.length + '｜❤️' + r.run.hearts);
-  if (r.mode === 'win') wins++;
+  if (r.mode === 'win') { wins++; assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている'); }
   if (r.mode === 'win' || r.run.act >= 1) stage1++;
   assert.ok(Object.keys(r.run.party).length <= r.run.slots, 'なかまが わくより おおい');
 }
 assert.ok(stage1 >= 13, 'ふつうの あそびかたで クマに かてない ぼうけんが おおい: ' + stage1 + '/20');
 assert.ok(wins >= 8, 'ふつうの あそびかたで さいごまで いけない ぼうけんが おおい: ' + wins + '/20');
-assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
 
 // かったら マスが すすんで、なかまを えらべて、セーブされる
 Math.random = seeded(3);
@@ -271,7 +270,7 @@ for (const rel of [[], ['hajike']]) {
 }
 console.log('ok  はじけまめ');
 
-// クマの 大わざ：かならず SLAM.warn びょう てを あげてから たたく。てを あげて いる あいだに コケコッコー！で ふっとばすと とまる
+// クマの 大わざ：かならず warn びょう てを あげてから たたく。てを あげて いる あいだに コケコッコー！で ふっとばすと とまる
 for (const stopIt of [false, true]) {
   D.newRun(); D.openMap(); D.startBattle(D.nextNodes()[0], 'fight');
   D.G.waves.length = 0;
@@ -283,7 +282,7 @@ for (const stopIt of [false, true]) {
     if (stopIt && kuma.up && upT > 0.5) { D.G.cannon = 999; D.fireCannon(); }
     D.update(1 / 30);
     if (kuma.up) { upT += 1 / 30; continue; }
-    if (was && kuma.st === 'atk') { slams++; assert.ok(upT >= D.SLAM.warn - 0.08, 'てを あげずに 大わざ: ' + upT.toFixed(2)); }
+    if (was && kuma.st === 'atk') { slams++; assert.ok(upT >= D.MOVES.slam.warn - 0.08, 'てを あげずに 大わざ: ' + upT.toFixed(2)); }
     if (was && kuma.st === 'kb') stops++;
     upT = 0;
   }
@@ -299,6 +298,26 @@ k2.hp = 1;
 for (let n = 0; n < 30 * 3 && k2.st !== 'gone'; n++) D.update(1 / 30);
 assert.ok(k2.st === 'gone' && !k2.up, 'おいかえされても てを あげた まま: ' + JSON.stringify([k2.st, k2.up, k2.hp, p2.st, p2.hp, D.mode]));
 console.log('ok  クマの 大わざ');
+
+// ゴリラの 大わざ：しょうげきはが おしろまで はしって、とおった なかま ぜんいん（とんで いても）と おしろに あたる。てを あげて いる あいだに とめると でない
+for (const stopIt of [false, true]) {
+  D.newRun(); D.openMap(); D.run.party.king = 1; D.startBattle(D.nextNodes()[0], 'fight'); D.G.waves.length = 0;
+  const go = D.spawn('foe', 'gorira', 1.3), kara = D.spawn('ally', 'kara'), far = D.spawn('ally', 'piyo'), sky = D.spawn('ally', 'king');
+  kara.x = go.x - 40; far.x = 300; sky.x = 500; for (const a of [kara, far, sky]) a.speed = 0;
+  go.hits = D.MOVES.quake.every - 1;   // つぎの こうげきが 大わざ
+  const home = D.G.home.hp;
+  let upT = 0, quakes = 0;
+  for (let n = 0; n < 30 * 9; n++) {
+    if (stopIt && go.up && upT > 0.5) { D.G.cannon = 999; D.fireCannon(); }
+    D.update(1 / 30);
+    upT = go.up ? upT + 1 / 30 : 0;
+    quakes = Math.max(quakes, D.G.quakes.length);
+  }
+  const lost = [far.max - far.hp, sky.max - sky.hp, home - D.G.home.hp].map(Math.round).join(' '), dmg = Math.round(go.atk * D.MOVES.quake.mul);
+  if (stopIt) assert.strictEqual(lost, '0 0 0', 'とめたのに しょうげきはが きた: ' + lost);
+  else assert.strictEqual(lost, [dmg, dmg, dmg].join(' '), 'しょうげきはが ぜんいんと おしろに あたらない: ' + lost + '（' + dmg + '）');
+}
+console.log('ok  ゴリラの 大わざ');
 
 // コケコッコー！で てきが ふっとぶ
 D.newRun(); D.openMap();

@@ -27,12 +27,11 @@ module.exports = ({ D, fight, kid, seeded, store, SAVE, els }) => {
     const ok = G.slots.map((k, i) => i).filter(i => G.grain - D.UNITS[G.slots[i]].cost * G.mods.cost >= spare && !(G.cool[G.slots[i]] > 0));
     if (ok.length) D.deploy(ok[Math.floor(Math.random() * ok.length)]);
   }
-  // みて とめる：ふつうと おなじ。ただし クマが いる あいだは コケコッコー！を とっておき、てを あげて 0.6びょう たったら おす
+  // みて とめる：ふつうと おなじ。ただし ボスが 大わざの まえに てを あげて 0.6びょう たったとき、コケコッコー！が たまって いたら おす（とっておきは しない）
   function watcher() {
-    const G = D.G, kuma = G.ents.find(e => e.d.slam && e.st !== 'gone');
-    if (kuma && kuma.up && kuma.cd <= D.SLAM.warn - 0.6 && G.cannon >= G.cannonCd) { D.fireCannon(); return; }
-    const c = G.cannon; if (kuma) G.cannon = 0;
-    kid(); G.cannon = c;
+    const G = D.G, boss = G.ents.find(e => e.up && e.st !== 'gone');
+    if (boss && boss.cd <= D.MOVES[boss.d.move].warn - 0.6 && G.cannon >= G.cannonCd) { D.fireCannon(); return; }
+    kid();
   }
   // ちずでは いちばん 左、えらぶ がめんでは いちばん 上（いれかえは Lv の ひくい なかまを かえす）。conts＝「ステージの はじめから」の 上限
   function play(strat, carry, conts) {
