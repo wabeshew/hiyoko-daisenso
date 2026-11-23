@@ -9,7 +9,7 @@ const assert = require('assert');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 let js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 js = js.replace(/\}\)\(\);\s*$/, 'window.__dbg={newRun,newRelics,openMap,stageAgain,carryMate,debugBattle,offerMates,goNode,startBattle,nextNodes,makeMap,battleDef,update,draw,deploy,upgradePurse,fireCannon,spawn,newBattle,hitBase,mateCard,' +
-  'FLOORS,COLS,RELICS,UNITS,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
+  'FLOORS,COLS,RELICS,UNITS,SLAM,UNIT_ORDER,PURSE,LV_MUL,get run(){return run},set run(v){run=v},get G(){return G},get mode(){return mode},get picks(){return picks}};\n})();');
 
 function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 Math.random = seeded(7);
@@ -132,10 +132,10 @@ assert.ok(!els.stageName.innerHTML.includes('❤️'), 'まけたのに 上の �
 console.log('ok  なにもしないと まける');
 
 // ふつうの 7さいの あそびかたで、ボスまで いって かてる（ハートを つかっても よい）。
-// いれかえで からぴよを おうちに かえして まける ことも あるので、ステージ1 の クマは 6ぼうけん中 4いじょう（40ぼうけんで 30）、
-// 3つの ステージ ぜんぶは 3いじょう（40ぼうけんで 26。2026-11-19 の BALANCE=1）
+// いれかえで からぴよを おうちに かえして まける ことも あるので、ステージ1 の クマは 20ぼうけん中 13いじょう、3つの ステージ ぜんぶは 8いじょう
+// （この たねの 40ぼうけんで クマ 33・ぜんぶ 24。2026-11-23）。6ぼうけん だと、たたかいの ながさが かわって 乱数が ずれる だけで おちたので 20 に した
 let wins = 0, stage1 = 0;
-for (let s = 1; s <= 6; s++) {
+for (let s = 1; s <= 20; s++) {
   Math.random = seeded(s * 101);
   r = playRun(kid);
   const party = D.UNIT_ORDER.filter(k => r.run.party[k]).map(k => k + r.run.party[k]).join(' ');
@@ -144,8 +144,8 @@ for (let s = 1; s <= 6; s++) {
   if (r.mode === 'win' || r.run.act >= 1) stage1++;
   assert.ok(Object.keys(r.run.party).length <= r.run.slots, 'なかまが わくより おおい');
 }
-assert.ok(stage1 >= 4, 'ふつうの あそびかたで クマに かてない ぼうけんが おおい: ' + stage1 + '/6');
-assert.ok(wins >= 3, 'ふつうの あそびかたで さいごまで いけない ぼうけんが おおい: ' + wins + '/6');
+assert.ok(stage1 >= 13, 'ふつうの あそびかたで クマに かてない ぼうけんが おおい: ' + stage1 + '/20');
+assert.ok(wins >= 8, 'ふつうの あそびかたで さいごまで いけない ぼうけんが おおい: ' + wins + '/20');
 assert.strictEqual(store[SAVE], undefined, 'クリアしたのに セーブが のこっている');
 
 // かったら マスが すすんで、なかまを えらべて、セーブされる
@@ -270,6 +270,27 @@ for (const rel of [[], ['hajike']]) {
   assert.strictEqual(lost, rel.length ? '24 12 0' : '24 0 0', 'はじけまめの ダメージが おかしい: ' + lost);
 }
 console.log('ok  はじけまめ');
+
+// クマの 大わざ：かならず SLAM.warn びょう てを あげてから たたく。てを あげて いる あいだに コケコッコー！で ふっとばすと とまる
+for (const stopIt of [false, true]) {
+  D.newRun(); D.openMap(); D.startBattle(D.nextNodes()[0], 'fight');
+  D.G.waves.length = 0;
+  const kuma = D.spawn('foe', 'kuma', 1.3), kara = D.spawn('ally', 'kara');
+  kara.x = kuma.x - 40; kara.speed = 0;
+  let upT = 0, slams = 0, stops = 0;
+  for (let n = 0; n < 30 * 14; n++) {
+    const was = kuma.up;
+    if (stopIt && kuma.up && upT > 0.5) { D.G.cannon = 999; D.fireCannon(); }
+    D.update(1 / 30);
+    if (kuma.up) { upT += 1 / 30; continue; }
+    if (was && kuma.st === 'atk') { slams++; assert.ok(upT >= D.SLAM.warn - 0.08, 'てを あげずに 大わざ: ' + upT.toFixed(2)); }
+    if (was && kuma.st === 'kb') stops++;
+    upT = 0;
+  }
+  if (stopIt) assert.ok(slams === 0 && stops >= 1, 'コケコッコー！で 大わざが とまらない: ' + slams + ' ' + stops);
+  else assert.ok(slams >= 1 && kara.hp < kara.max - 4 * kuma.atk, '大わざが こない: ' + slams);
+}
+console.log('ok  クマの 大わざ');
 
 // コケコッコー！で てきが ふっとぶ
 D.newRun(); D.openMap();
