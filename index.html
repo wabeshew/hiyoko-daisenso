@@ -840,6 +840,7 @@ function pause() { if (mode !== 'playing' || G.result) return; mode = 'paused'; 
 function resume() { if (mode !== 'paused') return; mode = 'playing'; showOverlay(null); bgmPlay(); }
 function end(r) {
   G.result = r; G.endT = 1.6; G.lobs = []; bgmStop();
+  for (const e of G.ents) e.up = false;   // クマの 大わざも おしまい（しずむ ときに たたかない）
   for (const e of G.ents) if (e.st !== 'gone' && e.side === (r === 'win' ? 'foe' : 'ally')) defeat(e, true);
   // 見せ場：とめて ひかって ゆれて、こわれた いえが すなけむりを あげて しずむ（drawBase）。やさしい せかい なので 火や 黒い けむりでは なく すなけむりと 星（桜井 #003 #056 #095 #116）
   const win = r === 'win', bx = win ? G.len - HOME_X : HOME_X, vw = viewW();
@@ -1283,7 +1284,7 @@ function damage(o, n) {
 }
 // やられた なかまは おしろへ、てきは 自分の とりでへ とんで かえっていく
 function defeat(o, quiet) {
-  o.st = 'gone'; o.vx = -o.dir * 150; o.vy = -320; o.oy = 0; o.fade = 1; o.spin = 0;
+  o.st = 'gone'; o.up = false; o.vx = -o.dir * 150; o.vy = -320; o.oy = 0; o.fade = 1; o.spin = 0;
   if (quiet) return;
   if (every('pop', 0.05)) sfx.pop();   // まとめて おいかえしても おなじ 音が かさなって 大きく ならないように
   if (o.boss) {   // ボスを おいかえした：とめて 大きな 星
@@ -1435,7 +1436,7 @@ function step(e, dt) {
   const tg = target(e);
   if (tg.dist <= e.d.range) {
     if (e.st !== 'atk') { e.st = 'atk'; e.cd = slamNext(e) ? SLAM.warn : 0.3; }   // 大わざは かならず SLAM.warn びょう てを あげてから
-    if (!e.up && slamNext(e) && e.cd <= SLAM.warn) { e.up = true; sfx.alert(); }   // てを あげる（バナーは ださない。ポーズが かくれるので）
+    if (!e.up && !G.result && slamNext(e) && e.cd <= SLAM.warn) { e.up = true; sfx.alert(); }   // てを あげる（バナーは ださない。ポーズが かくれるので）
     if ((e.cd -= dt) <= 0) { strike(e, tg); e.hits++; e.cd = e.d.rate; e.lunge = LUNGE_T; }
   } else { e.st = 'walk'; e.up = false; e.x += e.dir * e.speed * dt; }
 }
@@ -1912,7 +1913,7 @@ function drawFx(f) {
     ctx.beginPath(); ctx.arc(f.x, f.y, (8 + 24 * p) * f.s, 0, TAU);
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1 + 5 * (1 - p); ctx.stroke(); ctx.strokeStyle = LINE; ctx.lineWidth = 1.2; ctx.stroke();
   }
-  else if (f.k === 'peas') { ctx.fillStyle = '#8fcf4a'; ctx.strokeStyle = LINE; ctx.lineWidth = 1.2; for (let i = 0; i < 4; i++) { const a = -0.4 - i * 0.75; oval(f.x + Math.cos(a) * 16 * p, f.y + Math.sin(a) * 16 * p, 2.5, 2.2); } }   // はじけた まめの かけら
+  else if (f.k === 'peas') { ctx.fillStyle = '#8fcf4a'; ctx.strokeStyle = LINE; ctx.lineWidth = 1.2; for (let i = 0; i < 4; i++) { const a = -0.4 - i * 0.75; oval(f.x + Math.cos(a) * 20 * p, f.y + Math.sin(a) * 20 * p, 3.4, 3); } }   // はじけた まめの かけら
   else if (f.k === 'puff') { ctx.fillStyle = 'rgba(255,255,255,.8)'; for (const d of [-10, 0, 10]) circ(f.x + d * (1 + p), f.y - 4 - p * 6, 5 + p * 4); }
   else if (f.k === 'wave') {
     ctx.lineCap = 'round';

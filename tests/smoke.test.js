@@ -290,6 +290,14 @@ for (const stopIt of [false, true]) {
   if (stopIt) assert.ok(slams === 0 && stops >= 1, 'コケコッコー！で 大わざが とまらない: ' + slams + ' ' + stops);
   else assert.ok(slams >= 1 && kara.hp < kara.max - 4 * kuma.atk, '大わざが こない: ' + slams);
 }
+// てを あげた まま おいかえされたら、大わざの しるしは のこらない
+D.newRun(); D.openMap(); D.startBattle(D.nextNodes()[0], 'fight'); D.G.waves.length = 0;
+const k2 = D.spawn('foe', 'kuma', 1.3), p2 = D.spawn('ally', 'kara'); p2.x = k2.x - 20; p2.speed = 0;   // からぴよの とどく 24 の なか
+for (let n = 0; n < 30 * 10 && !k2.up; n++) D.update(1 / 30);
+assert.ok(k2.up, 'クマが てを あげない');
+k2.hp = 1;
+for (let n = 0; n < 30 * 3 && k2.st !== 'gone'; n++) D.update(1 / 30);
+assert.ok(k2.st === 'gone' && !k2.up, 'おいかえされても てを あげた まま: ' + JSON.stringify([k2.st, k2.up, k2.hp, p2.st, p2.hp, D.mode]));
 console.log('ok  クマの 大わざ');
 
 // コケコッコー！で てきが ふっとぶ
